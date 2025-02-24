@@ -14,6 +14,11 @@
   </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <version>8.0.32</version> <!-- Utilize a versão mais recente disponível -->
+    </dependency>
 
     <dependency>
       <groupId>commons-fileupload</groupId>
@@ -74,7 +79,7 @@
   </dependencies>
 
   <build>
-    <finalName>auto-atendimento-biblioteca</finalName>
+    <finalName>techseller</finalName>
     <plugins>
 
       <plugin>

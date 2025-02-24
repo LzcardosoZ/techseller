@@ -1,7 +1,5 @@
 package br.com.techseller.servlet;
 
-
-
-public class CreateLogin {
+public class CreateUsuario {
 
 }
