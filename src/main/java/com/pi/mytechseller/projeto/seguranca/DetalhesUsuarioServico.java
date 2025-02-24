@@ -14,7 +14,6 @@ import java.util.Collections;
 
 @Service
 public class DetalhesUsuarioServico implements UserDetailsService {
-
     private final UsuarioRepositorio usuarioRepositorio;
 
     public DetalhesUsuarioServico(UsuarioRepositorio usuarioRepositorio) {

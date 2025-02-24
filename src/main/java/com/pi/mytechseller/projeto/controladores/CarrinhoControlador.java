@@ -4,6 +4,7 @@ import com.pi.mytechseller.projeto.modelos.Carrinho;
 import com.pi.mytechseller.projeto.modelos.ItemCarrinho;
 import com.pi.mytechseller.projeto.modelos.Usuario;
 import com.pi.mytechseller.projeto.servicos.CarrinhoServico;
+import com.pi.mytechseller.projeto.servicos.UsuarioServico;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.User;
@@ -14,15 +15,15 @@ import org.springframework.web.bind.annotation.*;
 public class CarrinhoControlador {
 
     private final CarrinhoServico carrinhoServico;
+    private final UsuarioServico usuarioServico; // Injeção do serviço de usuário
 
-    public CarrinhoControlador(CarrinhoServico carrinhoServico) {
+    public CarrinhoControlador(CarrinhoServico carrinhoServico, UsuarioServico usuarioServico) {
         this.carrinhoServico = carrinhoServico;
+        this.usuarioServico = usuarioServico;
     }
 
     @GetMapping
     public ResponseEntity<Carrinho> obterCarrinho(@AuthenticationPrincipal User usuario) {
-        // Aqui precisaremos buscar o usuário no banco pelo email (usuário autenticado)
-        // Supondo que já temos um método para isso no serviço de usuário
         Usuario usuarioBanco = buscarUsuarioPorEmail(usuario.getUsername());
         return ResponseEntity.ok(carrinhoServico.obterCarrinhoAtivo(usuarioBanco));
     }
@@ -45,7 +46,7 @@ public class CarrinhoControlador {
     }
 
     private Usuario buscarUsuarioPorEmail(String email) {
-        // Simulação de busca do usuário autenticado no banco
-        return new Usuario(); // Aqui, implementar corretamente o serviço de busca no banco
+        return usuarioServico.buscarPorEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
     }
 }
