@@ -11,6 +11,7 @@ public class Produto {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+<<<<<<< HEAD
     private Long id;
 
     @Column(nullable = false)
@@ -39,6 +40,41 @@ public class Produto {
 
     @ManyToOne
     @JoinColumn(name = "id_categoria", nullable = false)
+=======
+    @Column(name = "ID_Produto")
+    private Long id;
+
+    @Column(name = "Nome", nullable = false)
+    private String nome;
+
+    @Column(name = "Descricao")
+    private String descricao;
+
+    @Column(name = "Preco", nullable = false, precision = 10, scale = 2)
+    private BigDecimal preco;
+
+    @Column(name = "Estoque", nullable = false)
+    private Integer estoque;
+
+    @Column(name = "Tipo", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private TipoProduto tipo;
+
+    @Column(name = "Fornecedor")
+    private String fornecedor;
+
+    @Column(name = "ICMS", precision = 5, scale = 2)
+    private BigDecimal icms;
+
+    @Column(name = "Lote")
+    private String lote;
+
+    @Column(name = "DataCompra")
+    private LocalDateTime dataCompra = LocalDateTime.now();
+
+    @ManyToOne
+    @JoinColumn(name = "ID_Categoria", nullable = false)
+>>>>>>> 4b35fa2 (aprimorando as classes do pacote modelos)
     private Categoria categoria;
 
     // Getters e Setters
@@ -123,7 +159,11 @@ public class Produto {
     }
 
     public Categoria getCategoria() {
+<<<<<<< HEAD
         return categoria;
+=======
+        return categoria != null ? categoria : new Categoria(); // Retorna um objeto vazio em vez de null
+>>>>>>> 4b35fa2 (aprimorando as classes do pacote modelos)
     }
 
     public void setCategoria(Categoria categoria) {
@@ -135,11 +175,19 @@ public class Produto {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Produto produto = (Produto) o;
+<<<<<<< HEAD
         return Objects.equals(id, produto.id);
+=======
+        return id != null && id.equals(produto.id);
+>>>>>>> 4b35fa2 (aprimorando as classes do pacote modelos)
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id);
     }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 4b35fa2 (aprimorando as classes do pacote modelos)
 }

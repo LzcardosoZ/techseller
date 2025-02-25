@@ -2,7 +2,10 @@ package com.pi.mytechseller.projeto.modelos;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+<<<<<<< HEAD
 import java.util.List;
+=======
+>>>>>>> 4b35fa2 (aprimorando as classes do pacote modelos)
 import java.util.Objects;
 
 @Entity
@@ -11,6 +14,7 @@ public class Pedido {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+<<<<<<< HEAD
     private Long id;
 
     @ManyToOne
@@ -26,6 +30,27 @@ public class Pedido {
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ItemPedido> itens;
+=======
+    @Column(name = "ID_Pedido")
+    private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "ID_Usuario", nullable = false)
+    private Usuario usuario;
+
+    @Column(name = "Data_Pedido", nullable = false)
+    private LocalDateTime dataPedido;
+
+    @Column(name = "Status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private StatusPedido status;
+
+    // Construtor padrão
+    public Pedido() {
+        this.dataPedido = LocalDateTime.now();
+        this.status = StatusPedido.PENDENTE;
+    }
+>>>>>>> 4b35fa2 (aprimorando as classes do pacote modelos)
 
     // Getters e Setters
     public Long getId() {
@@ -60,6 +85,7 @@ public class Pedido {
         this.status = status;
     }
 
+<<<<<<< HEAD
     public List<ItemPedido> getItens() {
         return itens;
     }
@@ -68,16 +94,26 @@ public class Pedido {
         this.itens = itens;
     }
 
+=======
+>>>>>>> 4b35fa2 (aprimorando as classes do pacote modelos)
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Pedido pedido = (Pedido) o;
+<<<<<<< HEAD
         return Objects.equals(id, pedido.id);
+=======
+        return id != null && id.equals(pedido.id);
+>>>>>>> 4b35fa2 (aprimorando as classes do pacote modelos)
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id);
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 4b35fa2 (aprimorando as classes do pacote modelos)

@@ -9,6 +9,7 @@ public class Usuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+<<<<<<< HEAD
     private Long id;
 
     @Column(nullable = false)
@@ -37,6 +38,37 @@ public class Usuario {
     private Nivel nivel;
 
     private boolean ativo;
+=======
+    @Column(name = "ID")
+    private Long id;
+
+    @Column(name = "Nome", nullable = false)
+    private String nome;
+
+    @Column(name = "Email", nullable = false, unique = true)
+    private String email;
+
+    @Column(name = "CPF", nullable = false, unique = true, length = 14)
+    private String cpf;
+
+    @Column(name = "Telefone", nullable = false)
+    private String telefone;
+
+    @Column(name = "Endereco", nullable = false)
+    private String endereco;
+
+    @Column(name = "Senha", nullable = false)
+    private String senha;
+
+    @Column(name = "Ativo", nullable = false)
+    private Boolean ativo;
+
+
+    @ManyToOne
+    @JoinColumn(name = "ID_Nivel")
+    private Nivel nivel;
+
+>>>>>>> 4b35fa2 (aprimorando as classes do pacote modelos)
 
     // Getters e Setters
     public Long getId() {
@@ -87,6 +119,7 @@ public class Usuario {
         this.endereco = endereco;
     }
 
+<<<<<<< HEAD
     public String getLogin() {
         return login;
     }
@@ -95,6 +128,8 @@ public class Usuario {
         this.login = login;
     }
 
+=======
+>>>>>>> 4b35fa2 (aprimorando as classes do pacote modelos)
     public String getSenha() {
         return senha;
     }
@@ -103,6 +138,13 @@ public class Usuario {
         this.senha = senha;
     }
 
+<<<<<<< HEAD
+=======
+    public void setAtivo(Boolean ativo) { this.ativo = ativo;}
+
+    public Boolean getAtivo() { return ativo; }
+
+>>>>>>> 4b35fa2 (aprimorando as classes do pacote modelos)
     public Nivel getNivel() {
         return nivel;
     }
@@ -111,6 +153,7 @@ public class Usuario {
         this.nivel = nivel;
     }
 
+<<<<<<< HEAD
     public boolean isAtivo() {
         return ativo;
     }
@@ -119,17 +162,27 @@ public class Usuario {
         this.ativo = ativo;
     }
 
+=======
+>>>>>>> 4b35fa2 (aprimorando as classes do pacote modelos)
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Usuario usuario = (Usuario) o;
+<<<<<<< HEAD
         return Objects.equals(id, usuario.id);
+=======
+        return id != null && id.equals(usuario.id);
+>>>>>>> 4b35fa2 (aprimorando as classes do pacote modelos)
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id);
     }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 4b35fa2 (aprimorando as classes do pacote modelos)
 }
 

@@ -52,10 +52,13 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+<<<<<<< HEAD
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
+=======
+>>>>>>> 4b35fa2 (aprimorando as classes do pacote modelos)
 
         <!-- Spring Boot Validation -->
         <dependency>
@@ -90,6 +93,10 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+<<<<<<< HEAD
+=======
+                <version>3.4.3</version>
+>>>>>>> 4b35fa2 (aprimorando as classes do pacote modelos)
             </plugin>
         </plugins>
     </build>

@@ -10,6 +10,7 @@ public class ItemCarrinho {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+<<<<<<< HEAD
     private Long id;
 
     @ManyToOne
@@ -26,6 +27,32 @@ public class ItemCarrinho {
     @Column(nullable = false)
     private BigDecimal precoTotal;
 
+=======
+    @Column(name = "ID_Item")
+    private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "ID_Carrinho")
+    private Carrinho carrinho;
+
+    @ManyToOne
+    @JoinColumn(name = "ID_Produto")
+    private Produto produto;
+
+    @Column(name = "Quantidade", nullable = false)
+    private Integer quantidade;
+
+    @Column(name = "Preco_Total", nullable = false, precision = 10, scale = 2)
+    private BigDecimal precoTotal;
+
+    // metodo para atualizar o preço total automaticamente
+    public void atualizarPrecoTotal() {
+        if (produto != null && quantidade != null) {
+            this.precoTotal = produto.getPreco().multiply(new BigDecimal(quantidade));
+        }
+    }
+
+>>>>>>> 4b35fa2 (aprimorando as classes do pacote modelos)
     // Getters e Setters
     public Long getId() {
         return id;
@@ -36,7 +63,11 @@ public class ItemCarrinho {
     }
 
     public Carrinho getCarrinho() {
+<<<<<<< HEAD
         return carrinho;
+=======
+        return carrinho != null ? carrinho : new Carrinho();
+>>>>>>> 4b35fa2 (aprimorando as classes do pacote modelos)
     }
 
     public void setCarrinho(Carrinho carrinho) {
@@ -44,11 +75,19 @@ public class ItemCarrinho {
     }
 
     public Produto getProduto() {
+<<<<<<< HEAD
         return produto;
+=======
+        return produto != null ? produto : new Produto();
+>>>>>>> 4b35fa2 (aprimorando as classes do pacote modelos)
     }
 
     public void setProduto(Produto produto) {
         this.produto = produto;
+<<<<<<< HEAD
+=======
+        atualizarPrecoTotal(); // Atualiza o preço total ao definir o produto
+>>>>>>> 4b35fa2 (aprimorando as classes do pacote modelos)
     }
 
     public Integer getQuantidade() {
@@ -57,6 +96,10 @@ public class ItemCarrinho {
 
     public void setQuantidade(Integer quantidade) {
         this.quantidade = quantidade;
+<<<<<<< HEAD
+=======
+        atualizarPrecoTotal(); // Atualiza o preço total ao definir a quantidade
+>>>>>>> 4b35fa2 (aprimorando as classes do pacote modelos)
     }
 
     public BigDecimal getPrecoTotal() {
@@ -72,11 +115,19 @@ public class ItemCarrinho {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ItemCarrinho that = (ItemCarrinho) o;
+<<<<<<< HEAD
         return Objects.equals(id, that.id);
+=======
+        return id != null && id.equals(that.id);
+>>>>>>> 4b35fa2 (aprimorando as classes do pacote modelos)
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id);
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 4b35fa2 (aprimorando as classes do pacote modelos)
