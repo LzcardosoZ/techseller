@@ -36,15 +36,19 @@ public class UserController {
 
 
     @PostMapping("/login")
-    public String login(@ModelAttribute("user") User user) {
+    public String login(@ModelAttribute("user") User user, Model model) {
         String email = user.getEmail();
         Optional<User> userData = userRepository.findByEmail(email);
-        if (user.getPassword().equals(userData.get().getPassword())) {
-           return "home";
+        if(!userData.isPresent()) { //verifica se o usuario existe
+            model.addAttribute("errorMessage", "Usuario nao encontrado");
+            return "login";
         }
-        else {
-            return "erroLogin";
+        User foundUser = userData.get();
+        if (!foundUser.getPassword().equals(user.getPassword())) { //verifica se a senha esta correta
+            model.addAttribute("errorMessage", "E-mail ou senha incorretos");
+            return "login";
         }
+        return "redirect:/home";
     }
 
     // Página de cadastro

@@ -10,6 +10,9 @@
 <body>
 <div class="container">
     <h1 style="color: red">Login</h1>
+    <div th:if="${errorMessage}" class="alert alert-danger">
+        <p th:text="${errorMessage}"></p>
+    </div>
     <form class="col-5" th:action="@{/login}" method="post">
         <label><h6>Email</h6></label>
         <input type="text" name="email" class="form-control">
