@@ -17,8 +17,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/","/login", "/cadastro", "/registerUser", "/listarUsuarios", "/listarProdutos").permitAll()
+                        .requestMatchers("/login", "/cadastro", "/registerUser", "/listarUsuarios", "/listarProdutos").permitAll()
+                        .requestMatchers("/listarUsuarios").hasRole("ADMIN") //exige login para listar usuarios
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form

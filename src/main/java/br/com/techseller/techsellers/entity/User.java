@@ -30,7 +30,7 @@ public class User {
     private String grupo;
     @NotBlank(message = "A senha é obrigatória")
     private String password;
-
+    @Column(nullable = false)
     private String confPassword;
     private String status;
 

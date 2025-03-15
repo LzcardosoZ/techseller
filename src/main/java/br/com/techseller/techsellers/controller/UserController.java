@@ -4,6 +4,8 @@ import br.com.techseller.techsellers.entity.User;
 import br.com.techseller.techsellers.repository.UserRepository;
 import br.com.techseller.techsellers.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.ui.Model;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,6 +27,7 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
+
     // Exibe a tela de login
     @GetMapping("/login")
     public String login(Model model) {
@@ -37,18 +40,19 @@ public class UserController {
 
     @PostMapping("/login")
     public String login(@ModelAttribute("user") User user, Model model) {
-        String email = user.getEmail();
-        Optional<User> userData = userRepository.findByEmail(email);
-        if(!userData.isPresent()) { //verifica se o usuario existe
-            model.addAttribute("errorMessage", "Usuario nao encontrado");
+        Optional<User> userData = userRepository.findByEmail(user.getEmail());
+        if (userData.isPresent()) {
+            BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+            if (encoder.matches(user.getPassword(), userData.get().getPassword())) {
+                return "home";
+            } else {
+                model.addAttribute("errorMessage", "Senha incorreta.");
+                return "login";
+            }
+        } else {
+            model.addAttribute("errorMessage", "Usuário não encontrado.");
             return "login";
         }
-        User foundUser = userData.get();
-        if (!foundUser.getPassword().equals(user.getPassword())) { //verifica se a senha esta correta
-            model.addAttribute("errorMessage", "E-mail ou senha incorretos");
-            return "login";
-        }
-        return "redirect:/home";
     }
 
     // Página de cadastro
