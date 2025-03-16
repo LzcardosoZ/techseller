@@ -21,12 +21,13 @@
                 </li>
 
                 <!-- Opções para ADMIN -->
-                <li class="nav-item" th:if="${usuarioLogado != null and usuarioLogado.grupo.toString() == 'ADMIN'}">
+                <li class="nav-item d-flex gap-3" th:if="${usuarioLogado != null and usuarioLogado.grupo.ordinal() == 0}">
                     <a class="nav-link" href="/admin/usuarios">Gerenciar Usuários</a>
+                    <a class="nav-link" href="/estoque">Gerenciar Estoque</a>
                 </li>
 
                 <!-- Opções para ESTOQUISTA -->
-                <li class="nav-item" th:if="${usuarioLogado != null and usuarioLogado.grupo.toString() == 'ESTOQUISTA'}">
+                <li class="nav-item" th:if="${usuarioLogado != null and usuarioLogado.grupo.ordinal() == 1}">
                     <a class="nav-link" href="/estoque">Gerenciar Estoque</a>
                 </li>
 
@@ -39,8 +40,8 @@
 </nav>
 
 <div class="container mt-4">
-    <h2>Bem-vindo, <span th:text="${usuarioLogado != null ? usuarioLogado.nome : 'Usuário'}"></span>!</h2>
-
+    <h2>Bem-vindo, <span th:text="${usuarioLogado != null ? usuarioLogado.username : 'Usuário'}"></span>!</h2>
+    <p>Grupo: <span th:text="${usuarioLogado != null ? usuarioLogado.grupo.ordinal() : 'N/A'}"></span></p>
 
 </div>
 </body>

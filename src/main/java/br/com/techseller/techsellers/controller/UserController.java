@@ -64,25 +64,37 @@ public class UserController {
     }
 
     @GetMapping("/menu")
-    public String menu(Model model, @AuthenticationPrincipal UserDetails userDetails) {
-        if (userDetails != null) {
+    public String menu(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             Optional<User> usuarioLogadoOpt = userService.findByEmail(userDetails.getUsername());
 
             if (usuarioLogadoOpt.isPresent()) {
-                model.addAttribute("usuarioLogado", usuarioLogadoOpt.get());
+                User usuario = usuarioLogadoOpt.get();
+                System.out.println("🔍 Enviando para a view: " + usuario.getEmail() + " | Grupo: " + usuario.getGrupo());
+                model.addAttribute("usuarioLogado", usuario);
             }
         }
 
-        return "menu"; // Retorna para menu.html
+        return "menu";
     }
+
+
 
     @PostMapping("/login")
     public String login(@ModelAttribute("user") User user, Model model) {
         Optional<User> userData = userRepository.findByEmail(user.getEmail());
+
         if (userData.isPresent()) {
             BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
             if (encoder.matches(user.getPassword(), userData.get().getPassword())) {
-                return "home";
+                User usuarioLogado = userData.get();
+                System.out.println("✅ Login bem-sucedido: " + usuarioLogado.getEmail() + " | Grupo: " + usuarioLogado.getGrupo());
+
+                model.addAttribute("usuarioLogado", usuarioLogado);
+                return "home"; // Ou "redirect:/home"
             } else {
                 model.addAttribute("errorMessage", "Senha incorreta.");
                 return "login";
@@ -92,6 +104,7 @@ public class UserController {
             return "login";
         }
     }
+
 
 
 

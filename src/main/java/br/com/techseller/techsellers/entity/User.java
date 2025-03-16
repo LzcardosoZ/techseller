@@ -14,7 +14,7 @@ import jakarta.validation.constraints.Size;
 @NoArgsConstructor
 @Data
 @Entity
-@Table(name="USERS", uniqueConstraints = { @UniqueConstraint(columnNames = "email") })
+@Table(name="users", uniqueConstraints = { @UniqueConstraint(columnNames = "email") })
 public class User {
     @Getter
     @Id
@@ -34,6 +34,7 @@ public class User {
     @Email(message = "Digite um email válido")
     private String email;
 
+    @Enumerated(EnumType.ORDINAL)
     @Column(name = "GRUPO")
     private Grupo grupo;
 
