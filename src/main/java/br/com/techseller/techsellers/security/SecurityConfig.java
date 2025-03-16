@@ -19,14 +19,18 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/cadastro", "/registerUser", "/listarUsuarios", "/listarProdutos").permitAll()
-                        .requestMatchers("/listarUsuarios").hasRole("ADMIN") //exige login para listar usuarios
+                        .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers("/login", "/cadastro", "/registerUser", "/listarProdutos").permitAll()
+                        .requestMatchers("/menu").authenticated() // Garante que apenas usuários logados acessem o menu
+                        .requestMatchers("/admin/**").hasAuthority("ADMIN") // ADMIN acessa /admin/**
+                        .requestMatchers("/estoque/**").hasAuthority("ESTOQUISTA") // ESTOQUISTA acessa /estoque/**
                         .anyRequest().authenticated()
                 )
+                .headers(headers -> headers.disable())
                 .formLogin(form -> form
                         .loginPage("/login")
-                        .loginProcessingUrl("/perform_login") // O Spring Security vai processar o login
-                        .defaultSuccessUrl("/home", true)
+                        .loginProcessingUrl("/perform_login") // Processamento do login pelo Spring Security
+                        .defaultSuccessUrl("/menu",true) // Redireciona para /menu após login bem-sucedido
                         .permitAll()
                 )
                 .logout(logout -> logout
