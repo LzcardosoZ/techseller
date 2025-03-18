@@ -1,24 +1,13 @@
 package br.com.techseller.techsellers.controller;
 
-import br.com.techseller.techsellers.entity.Grupo;
 import br.com.techseller.techsellers.entity.User;
 import br.com.techseller.techsellers.repository.UserRepository;
 import br.com.techseller.techsellers.service.UserService;
-import br.com.techseller.techsellers.service.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.ui.Model;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import jakarta.validation.Valid;
-import org.springframework.validation.BindingResult;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,8 +22,6 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
-
-    // Exibe a tela de login
     @GetMapping("/login")
     public String login(Model model) {
         if (!model.containsAttribute("user")) {
@@ -43,65 +30,36 @@ public class UserController {
         return "login";
     }
 
-    // Página Home após login bem-sucedido
-    @GetMapping("/home")
-    public String home(Model model, @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
-        Optional<User> usuarioLogadoOpt = userService.findByEmail(userDetails.getUsername());
-
-        if (usuarioLogadoOpt.isPresent()) {
-            model.addAttribute("usuarioLogado", usuarioLogadoOpt.get());
-            return "home"; // Renderiza a página home.html
-        } else {
-            return "redirect:/login?error"; // Redireciona caso o usuário não seja encontrado
-        }
+    @GetMapping("/listarUsuarios")
+    public String listarUsuarios(Model model) {
+        List<User> usuarios = userService.listarUsuarios();
+        model.addAttribute("usuarios", usuarios);
+        return "listarUsuarios"; // Certifique-se de que há um template correspondente em templates/
     }
 
-    // Página de cadastro
+    @GetMapping("/home")
+    public String home(Model model, @AuthenticationPrincipal UserDetails userDetails) {
+        Optional<User> usuarioLogadoOpt = userService.findByEmail(userDetails.getUsername());
+
+        usuarioLogadoOpt.ifPresent(user -> model.addAttribute("usuarioLogado", user));
+
+        return usuarioLogadoOpt.isPresent() ? "home" : "redirect:/login?error";
+    }
+
     @GetMapping("/cadastro")
     public String cadastro(Model model) {
         model.addAttribute("user", new User());
         return "cadastro";
     }
 
-    @GetMapping("/listarUsuarios")
-    public String listarUsuarios(Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
-            return "redirect:/login";
-        }
-
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        Optional<User> usuarioLogadoOpt = userService.findByEmail(userDetails.getUsername());
-
-        usuarioLogadoOpt.ifPresent(user -> model.addAttribute("usuarioLogado", user));
-        model.addAttribute("usuarioLogado", usuarioLogadoOpt);
-
-        List<User> usuarios = userRepository.findAll();
-        model.addAttribute("usuarios", usuarios);
-
-        return "listarUsuarios";
-    }
-
-
     @PostMapping("/registerUser")
     public String registerUser(@ModelAttribute("user") User user, Model model) {
-        String result = null;
-
-        System.out.println(user);
-        if (!user.getPassword().equals(user.getConfPassword())) { // Verifica se as senhas são diferentes
-            model.addAttribute("errorMessage", "As senhas não coincidem.");
-            return "cadastro"; // Retorna para a mesma página com a mensagem de erro
-        }
-
         try {
             userService.registeruser(user);
-            return "login"; // Se tudo estiver correto, vai para login
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", "Erro ao cadastrar usuário.");
+            return "redirect:/login";
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("errorMessage", e.getMessage());
             return "cadastro";
         }
     }
-
-
 }
