@@ -1,15 +1,14 @@
 package br.com.techseller.techsellers.service;
 
 
-import br.com.techseller.techsellers.entity.Grupo;
 import br.com.techseller.techsellers.entity.User;
 import br.com.techseller.techsellers.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -29,6 +28,7 @@ public class UserServiceImpl implements UserService{
     @Override
     public void registeruser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setStatus(true);
         userRepository.save(user);
     }
 
@@ -41,6 +41,11 @@ public class UserServiceImpl implements UserService{
         );
 
         return usuario;
+    }
+
+    @Override
+    public List<User> listarUsuarios() {
+        return userRepository.findAll();
     }
 
 

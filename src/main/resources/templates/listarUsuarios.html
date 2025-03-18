@@ -39,30 +39,31 @@
     <table>
         <thead>
         <tr>
+            <th>ID</th>
             <th>Nome</th>
             <th>CPF</th>
             <th>Email</th>
-            <th>Grupo</th>
-            <th>Senha</th>
             <th>Status</th>
+            <th>Grupo</th>
             <th>Ações</th>
         </tr>
         </thead>
         <tbody>
         <!-- Linhas com valores nulos -->
         <tr th:each="usuario : ${usuarios}">
-            <td th:text="${usuario.nome} ?: '-'"></td>
+            <td th:text="${usuario.user_id} ?: '-'"></td>
+            <td th:text="${usuario.name} ?: '-'"></td>
             <td th:text="${usuario.cpf} ?: '-'"></td>
             <td th:text="${usuario.email} ?: '-'"></td>
+            <td th:text="${usuario.status ? 'Ativo' : 'Inativo'}"></td>
             <td th:text="${usuario.grupo} ?: '-'"></td>
-            <td th:text="${usuario.senha} ?: '-'"></td>
-            <td th:text="${usuario.status} ?: '-'"></td>
             <td><button class="btn-edit">Editar</button></td>
         </tr>
         </tbody>
     </table>
 
     <div class="text-center">
+            <a class="btn btn-outline-dark btn-back" href="/cadastro" >Novo</a>
         <a class="btn btn-outline-dark btn-back" th:href="@{/home}">Voltar</a>
     </div>
 </div>

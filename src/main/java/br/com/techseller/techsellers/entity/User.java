@@ -9,14 +9,21 @@ import org.aspectj.bridge.IMessage;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 @Entity
 @Table(name="users", uniqueConstraints = { @UniqueConstraint(columnNames = "email") })
-public class User {
-    @Getter
+public class User implements UserDetails {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) // Geração automática do ID
     @Column(name = "USER_ID")
@@ -46,10 +53,47 @@ public class User {
     @Column(name = "CONF_PASSWORD", nullable = false)
     private String confPassword;
 
-    @Column(name = "STATUS")
-    @Getter
-    private String status;
+    @Column(name = "STATUS", nullable = false)
+    private boolean status = true; //usuario começa como ativo
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
+    public String getUsername() {
+        return email; // Mantém o e-mail como identificador do Spring Security
+    }
+
+    public String getName() {
+        return username; // Retorna o nome do usuário corretamente
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return Collections.singletonList(() -> "ROLE_" + grupo.name()); // Retorna "ROLE_ADMIN" ou "ROLE_ESTOQUISTA"
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return UserDetails.super.isAccountNonExpired();
+    }
 
 
 
+    @Override
+    public boolean isAccountNonLocked() {
+        return UserDetails.super.isAccountNonLocked();
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return UserDetails.super.isCredentialsNonExpired();
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return UserDetails.super.isEnabled();
+    }
 }

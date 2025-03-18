@@ -6,6 +6,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -14,23 +15,30 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private final UserDetailsService userDetailsService;
+
+    public SecurityConfig(UserDetailsService userDetailsService) {
+        this.userDetailsService = userDetailsService;
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers("/login", "/cadastro", "/registerUser", "/listarProdutos").permitAll()
+                        .requestMatchers("/login", "/cadastro", "/registerUser").permitAll()
                         .requestMatchers("/menu").authenticated() // Garante que apenas usuários logados acessem o menu
-                        .requestMatchers("/admin/**").hasAuthority("ADMIN") // ADMIN acessa /admin/**
-                        .requestMatchers("/estoque/**").hasAuthority("ESTOQUISTA") // ESTOQUISTA acessa /estoque/**
-                        .anyRequest().authenticated()
+                        .requestMatchers("/listarUsuarios").authenticated()
+                        .anyRequest().permitAll()
                 )
                 .headers(headers -> headers.disable())
                 .formLogin(form -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/perform_login") // Processamento do login pelo Spring Security
-                        .defaultSuccessUrl("/menu",true) // Redireciona para /menu após login bem-sucedido
+                        .usernameParameter("email")
+                        .passwordParameter("password")
+                        .defaultSuccessUrl("/home",true) // Redireciona para /menu após login bem-sucedido
                         .permitAll()
                 )
                 .logout(logout -> logout

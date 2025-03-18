@@ -14,13 +14,13 @@
     <div th:if="${errorMessage}" class="alert alert-danger">
         <p th:text="${errorMessage}"></p>
     </div>
-    <form class="col-5" th:action="@{/login}" method="post" id="loginForm">
+    <form class="col-5" th:action="@{/perform_login}" method="post" id="loginForm">
         <label><h6>Email</h6></label>
         <input type="text" name="email" class="form-control">
         <label><h6>Senha</h6></label>
         <input type="password" name="password" class="form-control">
         <button type="submit" class="btn btn-success">Entrar</button>
-        <a href="/cadastro" class="btn btn-primary">Criar Conta</a>
+
     </form>
 
 </div>

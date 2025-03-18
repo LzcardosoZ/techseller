@@ -22,7 +22,8 @@
 
                 <!-- Opções para ADMIN -->
                 <li class="nav-item d-flex gap-3" th:if="${usuarioLogado != null and usuarioLogado.grupo.ordinal() == 0}">
-                    <a class="nav-link" href="/admin/usuarios">Gerenciar Usuários</a>
+                    <a class="nav-link" th:href="@{/listarUsuarios}">Gerenciar Usuários</a>
+
                     <a class="nav-link" href="/estoque">Gerenciar Estoque</a>
                 </li>
 
@@ -40,7 +41,8 @@
 </nav>
 
 <div class="container mt-4">
-    <h2>Bem-vindo, <span th:text="${usuarioLogado != null ? usuarioLogado.username : 'Usuário'}"></span>!</h2>
+    <h2>Bem-vindo, <span th:text="${usuarioLogado != null ? usuarioLogado.name : 'Usuário'}"></span>!</h2>
+
     <p>Grupo: <span th:text="${usuarioLogado != null ? usuarioLogado.grupo.ordinal() : 'N/A'}"></span></p>
 
 </div>

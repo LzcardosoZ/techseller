@@ -63,57 +63,26 @@ public class UserController {
         return "cadastro";
     }
 
-    @GetMapping("/menu")
-    public String menu(Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            Optional<User> usuarioLogadoOpt = userService.findByEmail(userDetails.getUsername());
-
-            if (usuarioLogadoOpt.isPresent()) {
-                User usuario = usuarioLogadoOpt.get();
-                System.out.println("🔍 Enviando para a view: " + usuario.getEmail() + " | Grupo: " + usuario.getGrupo());
-                model.addAttribute("usuarioLogado", usuario);
-            }
-        }
-
-        return "menu";
-    }
-
-
-
-    @PostMapping("/login")
-    public String login(@ModelAttribute("user") User user, Model model) {
-        Optional<User> userData = userRepository.findByEmail(user.getEmail());
-
-        if (userData.isPresent()) {
-            BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-            if (encoder.matches(user.getPassword(), userData.get().getPassword())) {
-                User usuarioLogado = userData.get();
-                System.out.println("✅ Login bem-sucedido: " + usuarioLogado.getEmail() + " | Grupo: " + usuarioLogado.getGrupo());
-
-                model.addAttribute("usuarioLogado", usuarioLogado);
-                return "home"; // Ou "redirect:/home"
-            } else {
-                model.addAttribute("errorMessage", "Senha incorreta.");
-                return "login";
-            }
-        } else {
-            model.addAttribute("errorMessage", "Usuário não encontrado.");
-            return "login";
-        }
-    }
-
-
-
-
     @GetMapping("/listarUsuarios")
     public String listarUsuarios(Model model) {
-        List<User> usuarios = userRepository.findAll(); // Busca todos os usuários do banco
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
+            return "redirect:/login";
+        }
+
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        Optional<User> usuarioLogadoOpt = userService.findByEmail(userDetails.getUsername());
+
+        usuarioLogadoOpt.ifPresent(user -> model.addAttribute("usuarioLogado", user));
+        model.addAttribute("usuarioLogado", usuarioLogadoOpt);
+
+        List<User> usuarios = userRepository.findAll();
         model.addAttribute("usuarios", usuarios);
+
         return "listarUsuarios";
     }
+
 
     @PostMapping("/registerUser")
     public String registerUser(@ModelAttribute("user") User user, Model model) {
