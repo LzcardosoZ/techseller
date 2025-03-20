@@ -36,6 +36,14 @@
 <div class="container">
     <h2 class="text-center text-danger">Usuários</h2>
 
+    <form method="get" action="/listarUsuarios" class="d-flex justify-content-center">
+        <div class="input-group mb-3 w-50">
+            <input type="text" name="username" class="form-control" placeholder="pesquisar pelo nome" />
+            <button type="submit" class="btn btn-primary">Buscar</button>
+        </div>
+
+    </form>
+
     <table>
         <thead>
         <tr>
@@ -52,12 +60,15 @@
         <!-- Linhas com valores nulos -->
         <tr th:each="usuario : ${usuarios}">
             <td th:text="${usuario.user_id} ?: '-'"></td>
-            <td th:text="${usuario.name} ?: '-'"></td>
+            <td th:text="${usuario.nomeUsuario} ?: '-'"></td>
             <td th:text="${usuario.cpf} ?: '-'"></td>
             <td th:text="${usuario.email} ?: '-'"></td>
             <td th:text="${usuario.status ? 'Ativo' : 'Inativo'}"></td>
             <td th:text="${usuario.grupo} ?: '-'"></td>
-            <td><button class="btn-edit">Editar</button></td>
+            <td>
+                <a th:href="@{/usuarios/{user_id}/editar(user_id=${usuario.user_id})}" class="btn btn-success">Editar</a>
+
+            </td>
         </tr>
         </tbody>
     </table>

@@ -56,6 +56,7 @@ public class User implements UserDetails {
     @Column(name = "STATUS", nullable = false)
     private boolean status = true; //usuario começa como ativo
 
+
     @Override
     public String getPassword() {
         return password;
@@ -63,11 +64,27 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return email; // Mantém o e-mail como identificador do Spring Security
+        return username; // Mantém o e-mail como identificador do Spring Security
+    }
+
+    public String getNomeUsuario() {
+        return username;
+    }
+
+    public void setNomeUsuario(String nomeUsuario) {
+        this.username = nomeUsuario;
+    }
+
+    public String getLoginEmail() {
+        return email;
     }
 
     public String getName() {
         return username; // Retorna o nome do usuário corretamente
+    }
+
+    public String getDisplayName() {
+        return username;
     }
 
     @Override

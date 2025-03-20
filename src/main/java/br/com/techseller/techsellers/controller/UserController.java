@@ -33,6 +33,9 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     // Exibe a tela de login
     @GetMapping("/login")
@@ -64,7 +67,7 @@ public class UserController {
     }
 
     @GetMapping("/listarUsuarios")
-    public String listarUsuarios(Model model) {
+    public String listarUsuarios(@RequestParam(required = false) String username, Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
@@ -75,28 +78,69 @@ public class UserController {
         Optional<User> usuarioLogadoOpt = userService.findByEmail(userDetails.getUsername());
 
         usuarioLogadoOpt.ifPresent(user -> model.addAttribute("usuarioLogado", user));
-        model.addAttribute("usuarioLogado", usuarioLogadoOpt);
 
-        List<User> usuarios = userRepository.findAll();
+        List<User> usuarios;
+        if (username != null && !username.isEmpty()) {
+            usuarios = userRepository.findByUsernameContainingIgnoreCase(username);
+        } else {
+            usuarios = userRepository.findAll();
+        }
+
         model.addAttribute("usuarios", usuarios);
+        model.addAttribute("nomePesquisa", username); // Para manter o valor no input
 
         return "listarUsuarios";
     }
 
+    @GetMapping("/usuarios/{user_id}/editar")
+    public String editarUsuario(@PathVariable("user_id") Long userId, Model model) {
+        User user = userService.buscarPorId(userId);
+        if (user == null) {
+            throw new RuntimeException("Usuário não encontrado!");
+        }
+        model.addAttribute("usuario", user); // ✅ Passando o objeto corretamente
+        return "editar_usuario";
+    }
+
+
+
+    @PostMapping("/usuarios/{user_id}")
+    public String atualizarUsuario(@PathVariable Long user_id, @ModelAttribute User usuario) {
+        User usuarioExistente = userService.buscarPorId(user_id);
+
+        if (usuarioExistente != null) {
+            if (usuario.getUsername() != null && !usuario.getUsername().isEmpty()) {
+                usuarioExistente.setUsername(usuario.getUsername()); // ✅ Agora salva corretamente
+            }
+            if (usuario.getCpf() != null && !usuario.getCpf().isEmpty()) {
+                usuarioExistente.setCpf(usuario.getCpf());
+            }
+            if (usuario.getGrupo() != null) {
+                usuarioExistente.setGrupo(usuario.getGrupo());
+            }
+
+            usuarioExistente.setStatus(usuario.isStatus());
+
+            userService.atualizarUsuario(user_id, usuarioExistente);
+        }
+
+        return "redirect:/listarUsuarios";
+    }
+
+
+
+
 
     @PostMapping("/registerUser")
     public String registerUser(@ModelAttribute("user") User user, Model model) {
-        String result = null;
-
-        System.out.println(user);
-        if (!user.getPassword().equals(user.getConfPassword())) { // Verifica se as senhas são diferentes
+        if (!user.getPassword().equals(user.getConfPassword())) {
             model.addAttribute("errorMessage", "As senhas não coincidem.");
-            return "cadastro"; // Retorna para a mesma página com a mensagem de erro
+            return "cadastro";
         }
 
         try {
             userService.registeruser(user);
-            return "login"; // Se tudo estiver correto, vai para login
+            return "redirect:/login"; // Se tudo estiver correto, redireciona para login
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Erro ao cadastrar usuário.");
             return "cadastro";
