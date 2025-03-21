@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import jakarta.validation.Valid;
+import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,26 +47,6 @@ public class UserController {
         return "login";
     }
 
-    // Página Home após login bem-sucedido
-    @GetMapping("/home")
-    public String home(Model model, @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
-        Optional<User> usuarioLogadoOpt = userService.findByEmail(userDetails.getUsername());
-
-        if (usuarioLogadoOpt.isPresent()) {
-            model.addAttribute("usuarioLogado", usuarioLogadoOpt.get());
-            return "home"; // Renderiza a página home.html
-        } else {
-            return "redirect:/login?error"; // Redireciona caso o usuário não seja encontrado
-        }
-    }
-
-    // Página de cadastro
-    @GetMapping("/cadastro")
-    public String cadastro(Model model) {
-        model.addAttribute("user", new User());
-        return "cadastro";
-    }
-
     @GetMapping("/listarUsuarios")
     public String listarUsuarios(@RequestParam(required = false) String username, Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -92,17 +73,32 @@ public class UserController {
         return "listarUsuarios";
     }
 
-    @GetMapping("/usuarios/{user_id}/editar")
-    public String editarUsuario(@PathVariable("user_id") Long userId, Model model) {
-        User user = userService.buscarPorId(userId);
-        if (user == null) {
-            throw new RuntimeException("Usuário não encontrado!");
-        }
-        model.addAttribute("usuario", user); // ✅ Passando o objeto corretamente
-        return "editar_usuario";
+    // Página Home após login bem-sucedido
+    @GetMapping("/home")
+    public String home(Model model, @AuthenticationPrincipal UserDetails userDetails) {
+        Optional<User> usuarioLogadoOpt = userService.findByEmail(userDetails.getUsername());
+        usuarioLogadoOpt.ifPresent(user -> model.addAttribute("usuarioLogado", user));
+
+        return usuarioLogadoOpt.isPresent() ? "home" : "redirect:/login?error";
+    }
+    // Página de cadastro
+    @GetMapping("/cadastro")
+    public String cadastro(Model model) {
+        model.addAttribute("user", new User());
+        return "cadastro";
     }
 
-
+    @GetMapping("/usuarios/{user_id}")
+    public String editarUsuario(@PathVariable("user_id") Long user_id, Model model) {
+        try {
+            User usuario = userService.buscarPorId(user_id);
+            model.addAttribute("usuario", usuario);
+            return "editar_usuario";
+        } catch (RuntimeException e) {
+            // Caso o usuário não seja encontrado, redireciona para a listagem
+            return "redirect:/listarUsuarios";
+        }
+    }
 
     @PostMapping("/usuarios/{user_id}")
     public String atualizarUsuario(@PathVariable Long user_id, @ModelAttribute User usuario) {
@@ -129,20 +125,16 @@ public class UserController {
 
 
 
-
-
     @PostMapping("/registerUser")
     public String registerUser(@ModelAttribute("user") User user, Model model) {
-        if (!user.getPassword().equals(user.getConfPassword())) {
-            model.addAttribute("errorMessage", "As senhas não coincidem.");
-            return "cadastro";
-        }
+        String result = null;
+
 
         try {
             userService.registeruser(user);
-            return "redirect:/login"; // Se tudo estiver correto, redireciona para login
-        } catch (Exception e) {
-            model.addAttribute("errorMessage", "Erro ao cadastrar usuário.");
+            return "redirect:/login";
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("errorMessage", e.getMessage());
             return "cadastro";
         }
     }

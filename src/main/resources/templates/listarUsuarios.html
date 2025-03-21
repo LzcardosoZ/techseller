@@ -66,7 +66,8 @@
             <td th:text="${usuario.status ? 'Ativo' : 'Inativo'}"></td>
             <td th:text="${usuario.grupo} ?: '-'"></td>
             <td>
-                <a th:href="@{/usuarios/{user_id}/editar(user_id=${usuario.user_id})}" class="btn btn-success">Editar</a>
+                <a class="btn btn-success" th:href="@{/usuarios/{user_id}(user_id=${usuario.user_id})}">Editar</a>
+
 
             </td>
         </tr>

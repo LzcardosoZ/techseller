@@ -1,12 +1,18 @@
 package br.com.techseller.techsellers.service;
 
+
 import br.com.techseller.techsellers.entity.User;
 import br.com.techseller.techsellers.repository.UserRepository;
+import br.com.techseller.techsellers.utils.CpfValidator;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+
+import static br.com.techseller.techsellers.utils.CpfValidator.isValidCPF;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -19,8 +25,17 @@ public class UserServiceImpl implements UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+
     @Override
     public void registeruser(User user) {
+        if (!isValidCPF(user.getCpf())) {
+            throw new IllegalArgumentException("CPF inválido!");
+        }
+
+        if (userRepository.findByCpf(user.getCpf()).isPresent()) {
+            throw new IllegalArgumentException("CPF já cadastrado!");
+        }
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setStatus(true);
         userRepository.save(user);
@@ -28,7 +43,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Optional<User> findByEmail(String email) {
-        return userRepository.findByEmail(email);
+        Optional<User> usuario = userRepository.findByEmail(email);
+
+        usuario.ifPresent(u ->
+                System.out.println("Usuário encontrado: " + u.getEmail() + " | Grupo: " + u.getGrupo())
+        );
+
+        return usuario;
     }
 
     @Override
@@ -47,12 +68,15 @@ public class UserServiceImpl implements UserService {
         User usuarioExistente = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-        // ✅ Agora altera corretamente o nome do usuário
         if (usuarioAtualizado.getNomeUsuario() != null && !usuarioAtualizado.getNomeUsuario().isEmpty()) {
-            usuarioExistente.setNomeUsuario(usuarioAtualizado.getNomeUsuario());
+            usuarioExistente.setUsername(usuarioAtualizado.getNomeUsuario());
         }
         if (usuarioAtualizado.getCpf() != null && !usuarioAtualizado.getCpf().isEmpty()) {
-            usuarioExistente.setCpf(usuarioAtualizado.getCpf());
+            String cpfLimpo = usuarioAtualizado.getCpf().replaceAll("[^0-9]", ""); // Remove formatação
+            if (!isValidCPF(cpfLimpo)) {
+                throw new IllegalArgumentException("CPF inválido!");
+            }
+            usuarioExistente.setCpf(cpfLimpo);
         }
         if (usuarioAtualizado.getGrupo() != null) {
             usuarioExistente.setGrupo(usuarioAtualizado.getGrupo());
@@ -61,5 +85,4 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(usuarioExistente);
     }
-
 }
