@@ -24,12 +24,13 @@
                 <li class="nav-item d-flex gap-3" th:if="${usuarioLogado != null and usuarioLogado.grupo.ordinal() == 0}">
                     <a class="nav-link" th:href="@{/listarUsuarios}">Gerenciar Usuários</a>
 
-                    <a class="nav-link" href="/estoque">Gerenciar Estoque</a>
+                    <a class="nav-link" href="/produtos">Gerenciar Produtos</a>
                 </li>
 
                 <!-- Opções para ESTOQUISTA -->
                 <li class="nav-item" th:if="${usuarioLogado != null and usuarioLogado.grupo.ordinal() == 1}">
-                    <a class="nav-link" href="/estoque">Gerenciar Estoque</a>
+                    <a href="/produtos" class="btn btn-primary">Gerenciar Produtos</a>
+
                 </li>
 
                 <li class="nav-item">
