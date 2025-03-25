@@ -6,6 +6,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -36,16 +39,11 @@ public class Produto {
     @Column(nullable = false)
     private boolean ativo = true; // Produto começa como ativo
 
-    @Column(nullable = true, length = 500)
-    private String imagem; // URL ou caminho da imagem
-
-    @Column(nullable = true, length = 500)
-    private String imagemPrincipal; // URL da imagem principal
-
     @Column(nullable = false)
     @DecimalMin(value = "0.5", message = "A avaliação mínima é 0.5")
     @DecimalMax(value = "5.0", message = "A avaliação máxima é 5.0")
     private double avaliacao;
 
-    private String imagemUrl;
+    @OneToMany(mappedBy = "produto", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<ImagemProduto> imagens = new ArrayList<>(); // Lista de imagens do produto
 }

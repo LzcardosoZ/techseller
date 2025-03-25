@@ -1,10 +1,14 @@
 package br.com.techseller.techsellers.service;
 
+import br.com.techseller.techsellers.entity.ImagemProduto;
 import br.com.techseller.techsellers.entity.Produto;
+import br.com.techseller.techsellers.repository.ImagemProdutoRepository;
 import br.com.techseller.techsellers.repository.ProdutoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,6 +17,9 @@ public class ProdutoServiceImpl implements ProdutoService{
 
     @Autowired
     private ProdutoRepository produtoRepository;
+
+    @Autowired
+    private ImagemProdutoRepository imagemProdutoRepository;
 
     public ProdutoServiceImpl(ProdutoRepository produtoRepository) {
         this.produtoRepository = produtoRepository;
@@ -27,9 +34,22 @@ public class ProdutoServiceImpl implements ProdutoService{
     }
 
     @Override
-    public void salvarProduto(Produto produto) {
-        produtoRepository.save(produto);
+    public void salvarProduto(Produto produto, MultipartFile imagem, boolean imagemPrincipal) {
+        produto = produtoRepository.save(produto); // Primeiro salva o produto para obter o ID
+
+        if (imagem != null && !imagem.isEmpty()) {
+            try {
+                ImagemProduto imagemProduto = new ImagemProduto();
+                imagemProduto.setProduto(produto);
+                imagemProduto.setImagem(imagem.getBytes());
+                imagemProduto.setImagemPrincipal(imagemPrincipal);
+                imagemProdutoRepository.save(imagemProduto);
+            } catch (IOException e) {
+                throw new RuntimeException("Erro ao salvar imagem do produto: " + e.getMessage());
+            }
+        }
     }
+
 
     @Override
     public Optional<Produto> buscarPorId(Long produto_id) {
@@ -53,11 +73,24 @@ public class ProdutoServiceImpl implements ProdutoService{
     }
 
     @Override
-    public void salvarUrlImagem(Long produtoId, String urlImagem) {
-        Produto produto = produtoRepository.findById(produtoId)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+    public void salvarImagem(Long produtoId, MultipartFile file, boolean imagemPrincipal) {
+        try {
+            Produto produto = produtoRepository.findById(produtoId)
+                    .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
-        produto.setImagemUrl(urlImagem);
-        produtoRepository.save(produto);
+            ImagemProduto imagemProduto = new ImagemProduto();
+            imagemProduto.setProduto(produto);
+            imagemProduto.setImagem(file.getBytes());
+            imagemProduto.setImagemPrincipal(imagemPrincipal);
+
+            imagemProdutoRepository.save(imagemProduto);
+        } catch (IOException e) {
+            throw new RuntimeException("Erro ao salvar imagem: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public List<ImagemProduto> listarImagensPorProduto(Long produtoId) {
+        return imagemProdutoRepository.findByProdutoProdutoId(produtoId);
     }
 }

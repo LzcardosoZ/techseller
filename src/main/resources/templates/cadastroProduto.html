@@ -90,9 +90,14 @@
             <input type="number" class="form-control" th:field="*{avaliacao}" min="0" max="5" required>
         </div>
 
+        <div class="mb-3">
+            <label class="form-label">Imagem do Produto:</label>
+            <input type="file" class="form-control" id="inputImagem" name="imagem" accept="image/*" required>
+
+
         <!-- Botão para abrir a modal -->
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#imagemModal">
-            Adicionar Imagem do Produto
+            Visualizar Imagem
         </button>
 
         <!-- Modal -->
@@ -105,9 +110,9 @@
                     </div>
                     <div class="modal-body">
                         <button type="button" id="btnSelecionarImagem" class="btn btn-info">
-                            Selecionar Imagem
+                            Alterar imagem
                         </button>
-                        <input type="file" id="inputImagem" name="imagem" accept="image/*" style="display: none;">
+
 
 
                         <!-- Espaço para visualizar a imagem selecionada -->
@@ -117,7 +122,6 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                        <button type="button" class="btn btn-success" id="btnSalvarImagem">Salvar</button>
                     </div>
                 </div>
             </div>

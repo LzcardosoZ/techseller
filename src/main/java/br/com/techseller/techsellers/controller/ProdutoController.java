@@ -1,5 +1,6 @@
 package br.com.techseller.techsellers.controller;
 
+import br.com.techseller.techsellers.entity.ImagemProduto;
 import br.com.techseller.techsellers.entity.Produto;
 import br.com.techseller.techsellers.service.ProdutoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,40 +57,34 @@ public class ProdutoController {
         return "redirect:/produtos";
     }
 
+    @GetMapping("/{id}/imagens")
+    public ResponseEntity<List<ImagemProduto>> listarImagens(@PathVariable Long id) {
+        return ResponseEntity.ok(produtoService.listarImagensPorProduto(id));
+    }
+
     @PostMapping("/salvar")
-    public String salvarProduto(@ModelAttribute("produto") Produto produto) {
-        produtoService.salvarProduto(produto);
+    public String salvarProduto(@ModelAttribute Produto produto,
+                                @RequestParam("imagem") MultipartFile imagem,
+                                @RequestParam(value = "imagemPrincipal", defaultValue = "true") boolean imagemPrincipal) {
+        produtoService.salvarProduto(produto, imagem, imagemPrincipal);
         return "redirect:/produtos";
     }
 
 
 
-    @PostMapping("/produtos/{id}/imagem")
-    public ResponseEntity<String> uploadImagem(@PathVariable Long id, @RequestParam("imagem") MultipartFile file) {
+
+    @PostMapping("/{id}/imagem")
+    public ResponseEntity<String> uploadImagem(@PathVariable Long id,
+                                               @RequestParam("imagem") MultipartFile file,
+                                               @RequestParam(value = "imagemPrincipal", defaultValue = "false") boolean imagemPrincipal) {
         try {
-            // Diretório onde a imagem será salva
-            String diretorioBase = "imagens/" + id + "/";
-            File diretorio = new File(diretorioBase);
-
-            // Criar o diretório se não existir
-            if (!diretorio.exists()) {
-                diretorio.mkdirs();
-            }
-
-            // Caminho completo do arquivo
-            String caminhoImagem = diretorioBase + file.getOriginalFilename();
-            File destino = new File(caminhoImagem);
-
-            // Salvar o arquivo no diretório físico
-            file.transferTo(destino);
-
-            // Salvar a URL no banco de dados
-            produtoService.salvarUrlImagem(id, "/" + caminhoImagem);
-
-            return ResponseEntity.ok("Imagem salva com sucesso: " + caminhoImagem);
+            produtoService.salvarImagem(id, file, imagemPrincipal);
+            return ResponseEntity.ok("Imagem salva com sucesso!");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao salvar imagem: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erro ao salvar imagem: " + e.getMessage());
         }
     }
 
 }
+
