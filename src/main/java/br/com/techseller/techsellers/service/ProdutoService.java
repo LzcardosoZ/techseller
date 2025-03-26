@@ -12,6 +12,9 @@ public interface ProdutoService {
     List<Produto> listarProdutos(String filtro);
     Optional<Produto> buscarPorId(Long id);
     void salvarProduto(Produto produto, MultipartFile imagem, boolean imagemPrincipal);
+
+    ImagemProduto buscarImagemPorId(Long imagemId);
+
     void inativarProduto(Long produto_id);
     void reativarProduto(Long produto_id);
     void salvarImagem(Long produtoId, MultipartFile file, boolean imagemPrincipal);

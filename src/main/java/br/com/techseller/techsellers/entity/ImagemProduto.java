@@ -1,15 +1,16 @@
 package br.com.techseller.techsellers.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 @Entity
 @Table(name = "IMAGEM_PRODUTO")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ImagemProduto {
 
     @Id
@@ -18,13 +19,32 @@ public class ImagemProduto {
     private Long id;
 
     @Lob
-    @Column(nullable = false)
-    private byte[] imagem; // Armazena a imagem como BLOB no banco
+    @Column(nullable = false, columnDefinition = "LONGBLOB")
+    @Basic(fetch = FetchType.LAZY)
+    private byte[] imagem;
 
     @Column(nullable = false)
-    private boolean imagemPrincipal; // Define se é a imagem principal
+    private Boolean imagemPrincipal;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "produto_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(
+            name = "produto_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_imagem_produto")
+    )
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Produto produto;
+
+    // Método para definir o produto mantendo a consistência bidirecional
+    public void setProduto(Produto produto) {
+        if (this.produto != null) {
+            this.produto.getImagens().remove(this);
+        }
+        this.produto = produto;
+        if (produto != null && !produto.getImagens().contains(this)) {
+            produto.getImagens().add(this);
+        }
+    }
 }

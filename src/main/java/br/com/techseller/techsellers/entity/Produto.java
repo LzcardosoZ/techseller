@@ -2,18 +2,19 @@ package br.com.techseller.techsellers.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 @Entity
 @Table(name = "PRODUTO")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Produto {
 
     @Id
@@ -23,27 +24,47 @@ public class Produto {
 
     @Column(nullable = false, length = 200)
     @NotBlank(message = "O nome do produto é obrigatório")
+    @Size(min = 3, max = 200, message = "O nome deve ter entre 3 e 200 caracteres")
     private String nome;
 
     @Column(nullable = false, length = 2000)
+    @NotBlank(message = "A descrição é obrigatória")
+    @Size(min = 10, max = 2000, message = "A descrição deve ter entre 10 e 2000 caracteres")
     private String descricaoDetalhada;
 
-    @Column(nullable = false)
-    @DecimalMin(value = "0.0", message = "O preço deve ser positivo")
-    private double preco;
+    @Column(nullable = false, columnDefinition = "DECIMAL(10,2)")
+    @DecimalMin(value = "0.01", message = "O preço mínimo é R$ 0,01")
+    private BigDecimal preco;
 
     @Column(nullable = false)
-    @Min(value = 0, message = "A quantidade em estoque deve ser positiva")
-    private int quantidadeEstoque;
+    @Min(value = 0, message = "A quantidade em estoque não pode ser negativa")
+    private Integer quantidadeEstoque;
 
     @Column(nullable = false)
-    private boolean ativo = true; // Produto começa como ativo
+    @Builder.Default
+    private Boolean ativo = true;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "DECIMAL(2,1)")
     @DecimalMin(value = "0.5", message = "A avaliação mínima é 0.5")
     @DecimalMax(value = "5.0", message = "A avaliação máxima é 5.0")
-    private double avaliacao;
+    @Builder.Default
+    private BigDecimal avaliacao = new BigDecimal("0.0");
 
-    @OneToMany(mappedBy = "produto", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<ImagemProduto> imagens = new ArrayList<>(); // Lista de imagens do produto
+    @OneToMany(
+            mappedBy = "produto",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
+    @BatchSize(size = 20)
+    @Builder.Default
+    private List<ImagemProduto> imagens = new ArrayList<>();
+
+    // Métodos auxiliares para manter a consistência bidirecional
+    public void adicionarImagem(ImagemProduto imagem) {
+        imagens.add(imagem);
+        imagem.setProduto(this);
+    }
+
+
 }

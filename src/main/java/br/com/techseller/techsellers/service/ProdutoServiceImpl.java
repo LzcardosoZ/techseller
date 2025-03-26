@@ -5,10 +5,14 @@ import br.com.techseller.techsellers.entity.Produto;
 import br.com.techseller.techsellers.repository.ImagemProdutoRepository;
 import br.com.techseller.techsellers.repository.ProdutoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,26 +31,68 @@ public class ProdutoServiceImpl implements ProdutoService{
 
     @Override
     public List<Produto> listarProdutos(String filtro) {
+        List<Produto> produtos;
         if (filtro != null && !filtro.isEmpty()) {
-            return produtoRepository.findByNomeContainingIgnoreCase(filtro); // Supondo que exista esse método no repository
+            produtos = produtoRepository.findByNomeContainingIgnoreCase(filtro);
+        } else {
+            produtos = produtoRepository.findAll();
         }
-        return produtoRepository.findAll();
+
+        // Carrega as imagens para cada produto
+        produtos.forEach(produto -> {
+            List<ImagemProduto> imagens = imagemProdutoRepository.findByProdutoProdutoId(produto.getProdutoId());
+            produto.setImagens(imagens);
+
+            // Garante que a lista de imagens nunca seja nula
+            if (produto.getImagens() == null) {
+                produto.setImagens(new ArrayList<>());
+            }
+        });
+
+        return produtos;
     }
 
     @Override
+    @Transactional
     public void salvarProduto(Produto produto, MultipartFile imagem, boolean imagemPrincipal) {
-        produto = produtoRepository.save(produto); // Primeiro salva o produto para obter o ID
+        // Validação básica do produto
+        if (produto == null) {
+            throw new IllegalArgumentException("Produto não pode ser nulo");
+        }
 
-        if (imagem != null && !imagem.isEmpty()) {
-            try {
-                ImagemProduto imagemProduto = new ImagemProduto();
-                imagemProduto.setProduto(produto);
-                imagemProduto.setImagem(imagem.getBytes());
-                imagemProduto.setImagemPrincipal(imagemPrincipal);
-                imagemProdutoRepository.save(imagemProduto);
-            } catch (IOException e) {
-                throw new RuntimeException("Erro ao salvar imagem do produto: " + e.getMessage());
+        // Validação da imagem (obrigatória conforme regra de negócio)
+        if (imagem == null || imagem.isEmpty()) {
+            throw new IllegalArgumentException("O produto deve ter pelo menos uma imagem");
+        }
+
+        try {
+            // Definir valores padrão
+            if (produto.getAvaliacao() == null) {
+                produto.setAvaliacao(new BigDecimal("0.0"));
             }
+            if (produto.getAtivo() == null) {
+                produto.setAtivo(true);
+            }
+
+            // Salva o produto primeiro para obter o ID
+            produto = produtoRepository.save(produto);
+
+            // Cria e configura a imagem
+            ImagemProduto imagemProduto = ImagemProduto.builder()
+                    .imagem(imagem.getBytes())
+                    .imagemPrincipal(imagemPrincipal)
+                    .build();
+
+            // Adiciona a imagem ao produto (mantém a consistência bidirecional)
+            produto.adicionarImagem(imagemProduto);
+
+            // Salva a imagem
+            imagemProdutoRepository.save(imagemProduto);
+
+        } catch (IOException e) {
+            throw new RuntimeException("Erro ao processar imagem do produto: " + e.getMessage(), e);
+        } catch (DataIntegrityViolationException e) {
+            throw new RuntimeException("Erro de integridade ao salvar produto: " + e.getMessage(), e);
         }
     }
 
@@ -54,6 +100,12 @@ public class ProdutoServiceImpl implements ProdutoService{
     @Override
     public Optional<Produto> buscarPorId(Long produto_id) {
         return produtoRepository.findById(produto_id);
+    }
+
+    @Override
+    public ImagemProduto buscarImagemPorId(Long imagemId) {
+        return imagemProdutoRepository.findById(imagemId)
+                .orElseThrow(() -> new RuntimeException("Imagem não encontrada"));
     }
 
     @Override

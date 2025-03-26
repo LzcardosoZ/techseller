@@ -14,8 +14,8 @@
     <div class="container">
         <a class="navbar-brand text-light fw-bold" href="#">TechSeller</a>
         <div class="ms-auto">
-
-            <a href="#" class="btn btn-danger btn-sm">Sair</a>
+            <span class="text-light me-3" th:text="'Olá, ' + ${nomeUsuario}"></span>
+            <a href="/logout" class="btn btn-danger btn-sm">Sair</a>
         </div>
     </div>
 </nav>
@@ -26,17 +26,16 @@
     <div class="d-flex justify-content-between align-items-center">
         <h4 class="fw-bold text-danger">Produtos</h4>
         <a th:href="@{/produtos/novo}" class="btn btn-success">+ Novo Produto</a>
-
     </div>
 
     <!-- Barra de Pesquisa -->
     <div class="mt-3 mb-3">
-        <div class="input-group">
-            <input type="text" class="form-control" placeholder="Pesquisar" />
-            <button class="btn btn-danger">
-                🔍
-            </button>
-        </div>
+        <form th:action="@{/produtos}" method="get">
+            <div class="input-group">
+                <input type="text" class="form-control" name="filtro" placeholder="Pesquisar" th:value="${filtro}"/>
+                <button class="btn btn-danger" type="submit">🔍</button>
+            </div>
+        </form>
     </div>
 
     <!-- Tabela de Produtos -->
@@ -57,24 +56,126 @@
                 <td th:text="${produto.produtoId}"></td>
                 <td th:text="${produto.nome}"></td>
                 <td th:text="${produto.quantidadeEstoque}"></td>
-                <td th:text="'R$ ' + ${produto.preco}"></td>
+                <td th:text="'R$ ' + ${#numbers.formatDecimal(produto.preco, 1, 2, 'POINT')}"></td>
                 <td>
                     <span th:class="${produto.ativo} ? 'text-success fw-bold' : 'text-danger fw-bold'"
                           th:text="${produto.ativo} ? 'Ativo' : 'Inativo'"></span>
                 </td>
                 <td>
-                    <a th:href="@{/produtos/editar/{id}(id=${produto.produtoId})}" class="btn btn-success btn-sm">
-                        ✏️ Editar
-                    </a>
-                    <a th:href="@{/produtos/{id}(id=${produto.produtoId})}" class="btn btn-primary btn-sm">
+                    <a th:href="@{/produtos/editar/{id}(id=${produto.produtoId})}" class="btn btn-success btn-sm">✏️ Editar</a>
+                    <button class="btn btn-primary btn-sm visualizar-produto"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modalProduto"
+                            th:attr="data-id=${produto.produtoId},
+                    data-nome=${produto.nome},
+                    data-quantidade=${produto.quantidadeEstoque},
+                    data-preco=${#numbers.formatDecimal(produto.preco, 1, 2, 'POINT')},
+                    data-status=${produto.ativo},
+                    data-imagem-id=${produto.imagens?.size() > 0 ? produto.imagens[0].id : ''}">
                         👁️ Visualizar
-                    </a>
+                    </button>
+                    <a th:if="${produto.ativo}" th:href="@{/produtos/inativar/{id}(id=${produto.produtoId})}" class="btn btn-warning btn-sm">❌ Inativar</a>
+                    <a th:unless="${produto.ativo}" th:href="@{/produtos/reativar/{id}(id=${produto.produtoId})}" class="btn btn-info btn-sm">✅ Reativar</a>
                 </td>
             </tr>
             </tbody>
         </table>
     </div>
+
+    <!-- Modal para exibir detalhes do produto -->
+    <div class="modal fade" id="modalProduto" tabindex="-1" aria-labelledby="modalProdutoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalProdutoLabel">Detalhes do Produto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <img id="modalImagem" src="" class="img-fluid rounded mb-3" style="max-height: 300px;" alt="Imagem do Produto">
+                        </div>
+                        <div class="col-md-6">
+                            <h4 id="modalNome" class="mb-3"></h4>
+
+                            <!-- Avaliação em estrelas com texto "Avaliação:" -->
+                            <div class="mb-3">
+                                <strong>Avaliação:</strong>
+                                <div class="rating d-inline-block ms-2">
+                                    <span id="modalRatingStars"></span>
+                                    <span id="modalAvaliacao" class="ms-2 text-muted"></span>
+                                </div>
+                            </div>
+
+                            <!-- Preço -->
+                            <div class="mb-3">
+                                <strong>Preço:</strong>
+                                <span id="modalPreco" class="text-success fw-bold ms-2"></span>
+                            </div>
+
+                            <!-- Quantidade em estoque -->
+                            <div class="mb-4">
+                                <strong>Quantidade disponível:</strong>
+                                <span id="modalQuantidade" class="ms-2"></span>
+                            </div>
+
+                            <!-- Botão de Comprar -->
+                            <button class="btn btn-success btn-lg w-100">
+                                <i class="fas fa-shopping-cart me-2"></i> Comprar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = new bootstrap.Modal(document.getElementById('modalProduto'));
+
+            document.querySelectorAll('.visualizar-produto').forEach(button => {
+                button.addEventListener('click', function() {
+                    // Dados básicos
+                    document.getElementById('modalNome').textContent = this.getAttribute('data-nome');
+                    document.getElementById('modalPreco').textContent = 'R$ ' + this.getAttribute('data-preco');
+                    document.getElementById('modalQuantidade').textContent = this.getAttribute('data-quantidade');
+
+                    // Avaliação em estrelas
+                    const avaliacao = parseFloat(this.getAttribute('data-avaliacao')) || 0;
+                    const ratingStarsContainer = document.getElementById('modalRatingStars');
+                    ratingStarsContainer.innerHTML = '';
+
+                    // Texto da avaliação
+                    document.getElementById('modalAvaliacao').textContent = avaliacao.toFixed(1);
+
+                    // Adicionar estrelas
+                    for (let i = 1; i <= 5; i++) {
+                        const star = document.createElement('i');
+                        star.className = i <= avaliacao ? 'fas fa-star' :
+                            (i - 0.5 <= avaliacao ? 'fas fa-star-half-alt' : 'far fa-star');
+                        ratingStarsContainer.appendChild(star);
+                    }
+
+                    // Imagem do produto
+                    const imagemId = this.getAttribute('data-imagem-id');
+                    const imagemElement = document.getElementById('modalImagem');
+
+                    if (imagemId) {
+                        imagemElement.src = '/produtos/imagem/' + imagemId;
+                        imagemElement.style.display = 'block';
+                    } else {
+                        imagemElement.style.display = 'none';
+                    }
+
+                    modal.show();
+                });
+            });
+        });
+    </script>
 </body>
 </html>
