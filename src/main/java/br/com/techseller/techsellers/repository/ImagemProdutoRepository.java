@@ -2,6 +2,9 @@ package br.com.techseller.techsellers.repository;
 
 import br.com.techseller.techsellers.entity.ImagemProduto;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -9,4 +12,8 @@ import java.util.List;
 @Repository
 public interface ImagemProdutoRepository extends JpaRepository<ImagemProduto, Long> {
     List<ImagemProduto> findByProdutoProdutoId(Long produtoId);
+
+    @Modifying
+    @Query("UPDATE ImagemProduto i SET i.imagemPrincipal = false WHERE i.produto.produtoId = :produtoId")
+    void updateAllImagensNotPrincipal(@Param("produtoId") Long produtoId);
 }

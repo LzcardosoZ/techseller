@@ -28,7 +28,7 @@ public class ImagemProduto {
     private Boolean imagemPrincipal;
 
     // Novos campos para armazenamento híbrido
-    @Column(nullable = false, length = 255)
+    @Column(nullable = true, length = 255)
     private String caminhoArquivo;
 
     @Column(nullable = false, length = 100)
