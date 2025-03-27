@@ -4,8 +4,18 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <title>Listar Produtos</title>
+    <style>
+        .rating {
+            color: #ffc107;
+        }
+        .product-image {
+            max-height: 300px;
+            object-fit: contain;
+        }
+    </style>
 </head>
 <body>
 
@@ -67,11 +77,12 @@
                             data-bs-toggle="modal"
                             data-bs-target="#modalProduto"
                             th:attr="data-id=${produto.produtoId},
-                    data-nome=${produto.nome},
-                    data-quantidade=${produto.quantidadeEstoque},
-                    data-preco=${#numbers.formatDecimal(produto.preco, 1, 2, 'POINT')},
-                    data-status=${produto.ativo},
-                    data-imagem-id=${produto.imagens?.size() > 0 ? produto.imagens[0].id : ''}">
+                                    data-nome=${produto.nome},
+                                    data-quantidade=${produto.quantidadeEstoque},
+                                    data-preco=${#numbers.formatDecimal(produto.preco, 1, 2, 'POINT')},
+                                    data-avaliacao=${produto.avaliacao != null ? produto.avaliacao : 0},
+                                    data-status=${produto.ativo},
+                                    data-imagem-id=${produto.imagens != null && !produto.imagens.isEmpty() ? produto.imagens[0].id : ''}">
                         👁️ Visualizar
                     </button>
                     <a th:if="${produto.ativo}" th:href="@{/produtos/inativar/{id}(id=${produto.produtoId})}" class="btn btn-warning btn-sm">❌ Inativar</a>
@@ -92,13 +103,15 @@
                 </div>
                 <div class="modal-body">
                     <div class="row">
-                        <div class="col-md-6">
-                            <img id="modalImagem" src="" class="img-fluid rounded mb-3" style="max-height: 300px;" alt="Imagem do Produto">
+                        <div class="col-md-6 text-center">
+                            <img id="modalImagem" src=""
+                                 class="img-fluid rounded product-image mb-3"
+                                 alt="Imagem do Produto"
+                                 onerror="this.src='/img/sem-imagem.jpg'">
                         </div>
                         <div class="col-md-6">
                             <h4 id="modalNome" class="mb-3"></h4>
 
-                            <!-- Avaliação em estrelas com texto "Avaliação:" -->
                             <div class="mb-3">
                                 <strong>Avaliação:</strong>
                                 <div class="rating d-inline-block ms-2">
@@ -107,19 +120,16 @@
                                 </div>
                             </div>
 
-                            <!-- Preço -->
                             <div class="mb-3">
                                 <strong>Preço:</strong>
                                 <span id="modalPreco" class="text-success fw-bold ms-2"></span>
                             </div>
 
-                            <!-- Quantidade em estoque -->
                             <div class="mb-4">
                                 <strong>Quantidade disponível:</strong>
                                 <span id="modalQuantidade" class="ms-2"></span>
                             </div>
 
-                            <!-- Botão de Comprar -->
                             <button class="btn btn-success btn-lg w-100">
                                 <i class="fas fa-shopping-cart me-2"></i> Comprar
                             </button>
@@ -134,48 +144,46 @@
     </div>
 </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const modal = new bootstrap.Modal(document.getElementById('modalProduto'));
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = new bootstrap.Modal(document.getElementById('modalProduto'));
 
-            document.querySelectorAll('.visualizar-produto').forEach(button => {
-                button.addEventListener('click', function() {
-                    // Dados básicos
-                    document.getElementById('modalNome').textContent = this.getAttribute('data-nome');
-                    document.getElementById('modalPreco').textContent = 'R$ ' + this.getAttribute('data-preco');
-                    document.getElementById('modalQuantidade').textContent = this.getAttribute('data-quantidade');
+        document.querySelectorAll('.visualizar-produto').forEach(button => {
+            button.addEventListener('click', function() {
+                // Dados básicos
+                document.getElementById('modalNome').textContent = this.getAttribute('data-nome');
+                document.getElementById('modalPreco').textContent = 'R$ ' + this.getAttribute('data-preco');
+                document.getElementById('modalQuantidade').textContent = this.getAttribute('data-quantidade');
 
-                    // Avaliação em estrelas
-                    const avaliacao = parseFloat(this.getAttribute('data-avaliacao')) || 0;
-                    const ratingStarsContainer = document.getElementById('modalRatingStars');
-                    ratingStarsContainer.innerHTML = '';
+                // Configuração da avaliação
+                const avaliacao = parseFloat(this.getAttribute('data-avaliacao')) || 0;
+                const ratingStarsContainer = document.getElementById('modalRatingStars');
+                ratingStarsContainer.innerHTML = '';
+                document.getElementById('modalAvaliacao').textContent = avaliacao.toFixed(1);
 
-                    // Texto da avaliação
-                    document.getElementById('modalAvaliacao').textContent = avaliacao.toFixed(1);
+                // Adicionar estrelas
+                for (let i = 1; i <= 5; i++) {
+                    const star = document.createElement('i');
+                    star.className = i <= avaliacao ? 'fas fa-star' :
+                        (i - 0.5 <= avaliacao ? 'fas fa-star-half-alt' : 'far fa-star');
+                    ratingStarsContainer.appendChild(star);
+                }
 
-                    // Adicionar estrelas
-                    for (let i = 1; i <= 5; i++) {
-                        const star = document.createElement('i');
-                        star.className = i <= avaliacao ? 'fas fa-star' :
-                            (i - 0.5 <= avaliacao ? 'fas fa-star-half-alt' : 'far fa-star');
-                        ratingStarsContainer.appendChild(star);
-                    }
+                // Configuração da imagem
+                const imagemId = this.getAttribute('data-imagem-id');
+                const imagemElement = document.getElementById('modalImagem');
 
-                    // Imagem do produto
-                    const imagemId = this.getAttribute('data-imagem-id');
-                    const imagemElement = document.getElementById('modalImagem');
+                if (imagemId && imagemId !== '') {
+                    imagemElement.src = '/produtos/imagem/' + imagemId;
+                } else {
+                    imagemElement.src = '/img/sem-imagem.jpg';
+                }
 
-                    if (imagemId) {
-                        imagemElement.src = '/produtos/imagem/' + imagemId;
-                        imagemElement.style.display = 'block';
-                    } else {
-                        imagemElement.style.display = 'none';
-                    }
-
-                    modal.show();
-                });
+                modal.show();
             });
         });
-    </script>
+    });
+</script>
+
 </body>
 </html>

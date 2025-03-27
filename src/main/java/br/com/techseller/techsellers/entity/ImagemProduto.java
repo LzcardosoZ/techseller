@@ -18,13 +18,27 @@ public class ImagemProduto {
     @Column(name = "imagem_id")
     private Long id;
 
+    // Campo opcional - manter temporariamente para migração
     @Lob
-    @Column(nullable = false, columnDefinition = "LONGBLOB")
+    @Column(columnDefinition = "LONGBLOB")
     @Basic(fetch = FetchType.LAZY)
-    private byte[] imagem;
+    private byte[] imagem;  // Pode ser removido após migração completa
 
     @Column(nullable = false)
     private Boolean imagemPrincipal;
+
+    // Novos campos para armazenamento híbrido
+    @Column(nullable = false, length = 255)
+    private String caminhoArquivo;
+
+    @Column(nullable = false, length = 100)
+    private String nomeArquivo;
+
+    @Column(nullable = false)
+    private Long tamanho;
+
+    @Column(nullable = false, length = 50)
+    private String tipoMime;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
@@ -37,7 +51,7 @@ public class ImagemProduto {
     @EqualsAndHashCode.Exclude
     private Produto produto;
 
-    // Método para definir o produto mantendo a consistência bidirecional
+
     public void setProduto(Produto produto) {
         if (this.produto != null) {
             this.produto.getImagens().remove(this);
@@ -46,5 +60,10 @@ public class ImagemProduto {
         if (produto != null && !produto.getImagens().contains(this)) {
             produto.getImagens().add(this);
         }
+    }
+
+
+    public String getExtensao() {
+        return nomeArquivo.substring(nomeArquivo.lastIndexOf(".") + 1);
     }
 }
