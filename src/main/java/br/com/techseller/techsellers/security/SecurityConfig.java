@@ -30,6 +30,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/login", "/cadastro", "/registerUser").permitAll()
+                        .requestMatchers("/produtos/editar/**").hasAnyRole("ADMIN", "ESTOQUISTA") // Nova regra
                         .requestMatchers("/menu").authenticated()
                         .requestMatchers("/listarUsuarios").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/usuarios/**").authenticated()
@@ -41,7 +42,7 @@ public class SecurityConfig {
                 .formLogin(form -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/perform_login")
-                        .usernameParameter("email") // ✅ Login agora é pelo email
+                        .usernameParameter("email")
                         .passwordParameter("password")
                         .defaultSuccessUrl("/home", true)
                         .permitAll()

@@ -8,49 +8,58 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProdutoService {
+
     /**
-     * Lista todos os produtos, com possibilidade de filtro
-     * @param filtro Texto para filtrar produtos por nome ou ID
+     * Lista produtos com filtro opcional
+     * @param filtro Texto para busca por nome ou ID
      * @return Lista de produtos
      */
     List<Produto> listarProdutos(String filtro);
 
     /**
-     * Busca um produto por seu ID
+     * Busca um produto por ID
      * @param id Identificador do produto
-     * @return Optional contendo o produto, se encontrado
+     * @return Optional contendo o produto se encontrado
      */
     Optional<Produto> buscarPorId(Long id);
 
     /**
-     * Salva um novo produto ou atualiza um existente
-     * @param produto Produto a ser salvo
-     * @param imagem Arquivo de imagem do produto
+     * Salva um novo produto com imagem obrigatória
+     * @param produto Produto a ser criado
+     * @param imagem Arquivo de imagem
      * @param imagemPrincipal Indica se é a imagem principal
      */
     void salvarProduto(Produto produto, MultipartFile imagem, boolean imagemPrincipal);
 
     /**
-     * Busca uma imagem de produto por seu ID
-     * @param imagemId Identificador da imagem
-     * @return Imagem do produto
+     * Edita um produto existente
+     * @param produto Produto com dados atualizados
+     * @param imagem Nova imagem (opcional)
+     * @param imagemPrincipal Indica se é a imagem principal
+     */
+    void editarProduto(Produto produto, MultipartFile imagem, boolean imagemPrincipal);
+
+    /**
+     * Busca uma imagem por ID
+     * @param imagemId ID da imagem
+     * @return Imagem encontrada
      */
     ImagemProduto buscarImagemPorId(Long imagemId);
 
     /**
      * Inativa um produto
-     * @param produto_id ID do produto a ser inativado
+     * @param produto_id ID do produto
      */
     void inativarProduto(Long produto_id);
 
     /**
-     * Reativa um produto previamente inativado
-     * @param produto_id ID do produto a ser reativado
+     * Reativa um produto
+     * @param produto_id ID do produto
      */
     void reativarProduto(Long produto_id);
 
     /**
-     * Salva uma imagem adicional para um produto
+     * Adiciona uma imagem a um produto existente
      * @param produtoId ID do produto
      * @param file Arquivo de imagem
      * @param imagemPrincipal Indica se é a imagem principal
@@ -60,14 +69,14 @@ public interface ProdutoService {
     /**
      * Lista todas as imagens de um produto
      * @param produtoId ID do produto
-     * @return Lista de imagens do produto
+     * @return Lista de imagens
      */
     List<ImagemProduto> listarImagensPorProduto(Long produtoId);
 
     /**
-     * Edita um produto existente
-     * @param produto Produto a ser editado
-     * @return Produto atualizado
+     * Edição básica de produto (método obsoleto - manter para compatibilidade)
+     * @deprecated Usar editarProduto(Produto, MultipartFile, boolean)
      */
+    @Deprecated
     Produto editarProduto(Produto produto);
 }

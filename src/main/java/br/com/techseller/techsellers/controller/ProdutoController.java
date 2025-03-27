@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/produtos")
@@ -50,11 +51,49 @@ public class ProdutoController {
 
         return "listarProdutos";
     }
+    @GetMapping("/editar/{id}")
+    public String editarProduto(@PathVariable Long id, Model model) {
+        Optional<Produto> produtoOpt = produtoService.buscarPorId(id);
+        if (produtoOpt.isPresent()) {
+            model.addAttribute("produto", produtoOpt.get());
+            return "editarProduto";
+        }
+        return "redirect:/produtos";
+    }
 
     @GetMapping("/novo")
     public String novoProduto(Model model) {
         model.addAttribute("produto", new Produto());
         return "cadastroProduto";
+    }
+    @PostMapping("/salvar")
+    public String salvarProduto(
+            @ModelAttribute @Valid Produto produto,
+            BindingResult result,
+            @RequestParam(value = "imagem", required = false) MultipartFile imagem,
+            @RequestParam(value = "imagemPrincipal", defaultValue = "false") boolean imagemPrincipal,
+            RedirectAttributes redirectAttributes) {
+
+        if (result.hasErrors()) {
+            return (produto.getProdutoId() == null) ? "cadastroProduto" : "editarProduto";
+        }
+
+        try {
+            if (produto.getProdutoId() == null) {
+                if (imagem == null || imagem.isEmpty()) {
+                    result.rejectValue("imagens", "imagem.vazia", "Selecione uma imagem");
+                    return "cadastroProduto";
+                }
+                produtoService.salvarProduto(produto, imagem, imagemPrincipal);
+            } else {
+                produtoService.editarProduto(produto, imagem, imagemPrincipal);
+            }
+            redirectAttributes.addFlashAttribute("success", "Produto salvo com sucesso!");
+            return "redirect:/produtos";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erro: " + e.getMessage());
+            return "redirect:/produtos";
+        }
     }
 
     @GetMapping("/inativar/{id}")
@@ -103,35 +142,6 @@ public class ProdutoController {
         }
     }
 
-    @PostMapping("/salvar")
-    public String salvarProduto(
-            @ModelAttribute Produto produto,
-            BindingResult result,
-            @RequestParam("imagem") MultipartFile imagem,
-            @RequestParam(value = "imagemPrincipal", defaultValue = "false") boolean imagemPrincipal,
-            Model model,
-            RedirectAttributes redirectAttributes) {
-
-        // Validação manual da imagem
-        if (imagem == null || imagem.isEmpty()) {
-            result.rejectValue("imagens", "imagem.vazia", "Selecione uma imagem");
-        } else if (!isTipoImagemValido(imagem.getContentType())) {
-            result.rejectValue("imagens", "imagem.tipo.invalido", "Tipo de imagem não suportado");
-        }
-
-        if (result.hasErrors()) {
-            return "cadastroProduto";
-        }
-
-        try {
-            produtoService.salvarProduto(produto, imagem, imagemPrincipal);
-            redirectAttributes.addFlashAttribute("success", "Produto cadastrado com sucesso!");
-            return "redirect:/produtos";
-        } catch (Exception e) {
-            model.addAttribute("error", "Erro ao cadastrar produto: " + e.getMessage());
-            return "cadastroProduto";
-        }
-    }
 
     @PostMapping("/{id}/imagem")
     public ResponseEntity<String> uploadImagem(
