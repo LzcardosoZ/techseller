@@ -67,6 +67,8 @@
 
 <div class="container">
     <h2 class="text-center text-dark">Cadastrar Produto</h2>
+    <form th:action="@{/produtos/editar}" method="post" th:object="${produto}" enctype="multipart/form-data">
+        <input type="hidden" th:field="*{produtoId}">
     <form th:action="@{/produtos/salvar}" method="post" th:object="${produto}" enctype="multipart/form-data">
         <input type="hidden" id="produtoId" th:value="${produto.produtoId}">
         <div class="mb-3">
@@ -135,81 +137,63 @@
 </div>
 
 <script>
-    // Evento para abrir o explorador de arquivos ao clicar no botão "Selecionar Imagem"
-    document.getElementById("btnSelecionarImagem").addEventListener("click", function () {
-        document.getElementById("inputImagem").click(); // Abre o explorador de arquivos
-    });
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputImagem = document.getElementById("inputImagem");
+        const previewImagem = document.getElementById("previewImagem");
+        const previewContainer = document.getElementById("previewContainer");
+        const btnSelecionarImagem = document.getElementById("btnSelecionarImagem");
+        const produtoId = document.getElementById("produtoId").value;
 
-    // Exibir pré-visualização da imagem antes de salvar
-    document.getElementById("inputImagem").addEventListener("change", function (event) {
-        let file = event.target.files[0];
+        // Evento para abrir explorador de arquivos
+        btnSelecionarImagem.addEventListener("click", function () {
+            inputImagem.click();
+        });
 
-        if (file) {
-            let reader = new FileReader();
+        // Pré-visualização da imagem
+        inputImagem.addEventListener("change", function (event) {
+            let file = event.target.files[0];
 
-            reader.onload = function (e) {
-                document.getElementById("previewImagem").src = e.target.result;
-                document.getElementById("previewContainer").style.display = "block";
-            };
+            if (file) {
+                let reader = new FileReader();
 
-            reader.readAsDataURL(file);
-        }
-    });
+                reader.onload = function (e) {
+                    previewImagem.src = e.target.result;
+                    previewContainer.style.display = "block";
+                };
 
-    // Evento para salvar a imagem ao clicar em "Salvar"
-    document.getElementById("btnSalvarImagem").addEventListener("click", function () {
-        let inputImagem = document.getElementById("inputImagem");
-        let file = inputImagem.files[0];
+                reader.readAsDataURL(file);
 
-        if (!file) {
-            alert("Por favor, selecione uma imagem antes de salvar!");
-            return;
-        }
-
-        // Verifica se há um ID de produto definido no formulário
-        let produtoIdElement = document.getElementById("produtoId");
-        if (!produtoIdElement) {
-            alert("Erro: ID do produto não encontrado!");
-            return;
-        }
-
-        let produtoId = produtoIdElement.value; // Obtém o ID do produto
-
-        let formData = new FormData();
-        formData.append("imagem", file);
-
-        // Enviar a imagem para o backend
-        fetch(`/produtos/${produtoId}/imagem`, {
-            method: "POST",
-            body: formData
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("Erro ao salvar a imagem");
+                // Se estiver editando (tem produtoId), enviar imagem automaticamente
+                if (produtoId) {
+                    uploadImagem(file);
                 }
-                return response.text();
-            })
-            .then(data => {
-                alert("Imagem salva com sucesso!");
-                document.getElementById("previewImagem").src = URL.createObjectURL(file); // Atualiza a visualização
-                fecharModal(); // Chama a função para fechar a modal
-            })
-            .catch(error => {
-                console.error("Erro ao salvar imagem:", error);
-                alert("Erro ao salvar imagem. Tente novamente.");
-            });
-    });
+            }
+        });
 
-    // Função para fechar a modal corretamente
-    function fecharModal() {
-        let modal = document.getElementById("imagemModal");
+        function uploadImagem(file) {
+            let formData = new FormData();
+            formData.append("imagem", file);
+            formData.append("imagemPrincipal", "true");
 
-        let modalInstance = bootstrap.Modal.getInstance(modal);
-        if (modalInstance) {
-            modalInstance.hide();
+            fetch(`/produtos/${produtoId}/imagem`, {
+                method: "POST",
+                body: formData
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Erro ao salvar a imagem");
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    alert("Imagem atualizada com sucesso!");
+                })
+                .catch(error => {
+                    console.error("Erro ao salvar imagem:", error);
+                    alert("Erro ao salvar imagem. Tente novamente.");
+                });
         }
-    }
-
+    });
 </script>
 
 
