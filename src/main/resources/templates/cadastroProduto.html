@@ -67,26 +67,34 @@
 
 <div class="container">
     <h2 class="text-center text-dark">Cadastrar Produto</h2>
-    <form th:action="@{/produtos/editar}" method="post" th:object="${produto}" enctype="multipart/form-data">
-        <input type="hidden" th:field="*{produtoId}">
+
+    <!-- Mensagens de feedback -->
+    <div th:if="${sucesso}" class="alert alert-success" th:text="${sucesso}"></div>
+    <div th:if="${erro}" class="alert alert-danger" th:text="${erro}"></div>
+
     <form th:action="@{/produtos/salvar}" method="post" th:object="${produto}" enctype="multipart/form-data">
-        <input type="hidden" id="produtoId" th:value="${produto.produtoId}">
+        <input type="hidden" th:field="*{produtoId}">
+
         <div class="mb-3">
             <label class="form-label">Nome do Produto:</label>
             <input type="text" class="form-control" th:field="*{nome}" required>
         </div>
+
         <div class="mb-3">
             <label class="form-label">Preço:</label>
             <input type="number" class="form-control" th:field="*{preco}" step="0.01" required>
         </div>
+
         <div class="mb-3">
             <label class="form-label">Quantidade em Estoque:</label>
             <input type="number" class="form-control" th:field="*{quantidadeEstoque}" required>
         </div>
+
         <div class="mb-3">
             <label class="form-label">Descrição:</label>
             <textarea class="form-control" th:field="*{descricaoDetalhada}" required></textarea>
         </div>
+
         <div class="mb-3">
             <label class="form-label">Avaliação (0.5-5.0):</label>
             <input type="number" class="form-control" th:field="*{avaliacao}" step="0.1" min="0.5" max="5.0">
@@ -96,30 +104,28 @@
             <label class="form-label">Imagem do Produto:</label>
             <input type="file" class="form-control" id="inputImagem" name="imagem" accept="image/*" required>
 
-
-        <!-- Botão para abrir a modal -->
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#imagemModal">
-            Visualizar Imagem
-        </button>
+            <!-- Botão para abrir a modal -->
+            <button type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#imagemModal">
+                Visualizar Imagem
+            </button>
+        </div>
 
         <!-- Modal -->
         <div class="modal fade" id="imagemModal" tabindex="-1" aria-labelledby="imagemModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="imagemModalLabel">Adicionar Imagem</h5>
+                        <h5 class="modal-title" id="imagemModalLabel">Pré-visualização da Imagem</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <button type="button" id="btnSelecionarImagem" class="btn btn-info">
-                            Alterar imagem
+                            Selecionar Imagem
                         </button>
-
-
 
                         <!-- Espaço para visualizar a imagem selecionada -->
                         <div id="previewContainer" class="mt-3" style="display: none;">
-                            <img id="previewImagem" src="" alt="Prévia da Imagem" class="img-fluid rounded">
+                            <img id="previewImagem" src="#" alt="Prévia da Imagem" class="img-fluid rounded">
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -142,7 +148,7 @@
         const previewImagem = document.getElementById("previewImagem");
         const previewContainer = document.getElementById("previewContainer");
         const btnSelecionarImagem = document.getElementById("btnSelecionarImagem");
-        const produtoId = document.getElementById("produtoId").value;
+        const produtoId = document.querySelector("[name='produtoId']")?.value;
 
         // Evento para abrir explorador de arquivos
         btnSelecionarImagem.addEventListener("click", function () {
@@ -162,40 +168,10 @@
                 };
 
                 reader.readAsDataURL(file);
-
-                // Se estiver editando (tem produtoId), enviar imagem automaticamente
-                if (produtoId) {
-                    uploadImagem(file);
-                }
             }
         });
-
-        function uploadImagem(file) {
-            let formData = new FormData();
-            formData.append("imagem", file);
-            formData.append("imagemPrincipal", "true");
-
-            fetch(`/produtos/${produtoId}/imagem`, {
-                method: "POST",
-                body: formData
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error("Erro ao salvar a imagem");
-                    }
-                    return response.text();
-                })
-                .then(data => {
-                    alert("Imagem atualizada com sucesso!");
-                })
-                .catch(error => {
-                    console.error("Erro ao salvar imagem:", error);
-                    alert("Erro ao salvar imagem. Tente novamente.");
-                });
-        }
     });
 </script>
-
 
 </body>
 </html>

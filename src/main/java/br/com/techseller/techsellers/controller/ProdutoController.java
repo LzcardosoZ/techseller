@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
@@ -40,7 +41,6 @@ public class ProdutoController {
 
     @GetMapping
     public String listarProdutos(@RequestParam(required = false) String filtro, Model model) {
-        // Obtém o nome do usuário logado
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String nomeUsuario = auth.getName();
 
@@ -52,10 +52,83 @@ public class ProdutoController {
     }
 
     @GetMapping("/novo")
-    public String novoProduto(Model model) {
+    public String exibirFormularioCadastro(Model model) {
         model.addAttribute("produto", new Produto());
         return "cadastroProduto";
     }
+
+    @GetMapping("/editar/{id}")
+    public String exibirFormularioEdicao(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            return produtoService.buscarPorId(id)
+                    .map(produto -> {
+                        model.addAttribute("produto", produto);
+                        return "cadastroProduto";
+                    })
+                    .orElseGet(() -> {
+                        redirectAttributes.addFlashAttribute("erro", "Produto não encontrado para edição");
+                        return "redirect:/produtos";
+                    });
+        } catch (Exception e) {
+            log.error("Erro ao carregar produto para edição ID: {}", id, e);
+            redirectAttributes.addFlashAttribute("erro", "Erro ao carregar produto para edição");
+            return "redirect:/produtos";
+        }
+    }
+
+    @PostMapping("/salvar")
+    public String salvarProduto(
+            @Valid @ModelAttribute("produto") Produto produto,
+            BindingResult result,
+            @RequestParam("imagem") MultipartFile imagem,
+            RedirectAttributes redirectAttributes) {
+
+        // Validação do formulário
+        if (result.hasErrors()) {
+            log.warn("Erros de validação no produto: {}", result.getAllErrors());
+            return "cadastroProduto";
+        }
+
+        // Validação da imagem
+        if (imagem.isEmpty()) {
+            log.warn("Tentativa de salvar produto sem imagem");
+            redirectAttributes.addFlashAttribute("erro", "Por favor, selecione uma imagem para o produto");
+            return produto.getProdutoId() == null ?
+                    "redirect:/produtos/novo" :
+                    "redirect:/produtos/editar/" + produto.getProdutoId();
+        }
+
+        if (!isTipoImagemValido(imagem.getContentType())) {
+            log.warn("Tipo de imagem não suportado: {}", imagem.getContentType());
+            redirectAttributes.addFlashAttribute("erro", "Tipo de imagem não suportado. Use JPEG, PNG ou GIF");
+            return produto.getProdutoId() == null ?
+                    "redirect:/produtos/novo" :
+                    "redirect:/produtos/editar/" + produto.getProdutoId();
+        }
+
+        try {
+            // Usando o método salvarProduto existente que já processa produto e imagem
+            produtoService.salvarProduto(produto, imagem, true);
+
+            redirectAttributes.addFlashAttribute("sucesso",
+                    produto.getProdutoId() == null ?
+                            "Produto cadastrado com sucesso!" :
+                            "Produto atualizado com sucesso!");
+
+            return "redirect:/produtos";
+
+        } catch (Exception e) {
+            log.error("Erro ao salvar produto ID: {}", produto.getProdutoId(), e);
+            redirectAttributes.addFlashAttribute("erro",
+                    "Erro ao processar o produto: " + e.getMessage());
+
+            return produto.getProdutoId() == null ?
+                    "redirect:/produtos/novo" :
+                    "redirect:/produtos/editar/" + produto.getProdutoId();
+        }
+    }
+
+
 
     @GetMapping("/inativar/{id}")
     public String inativarProduto(@PathVariable Long id) {
@@ -79,58 +152,40 @@ public class ProdutoController {
         try {
             ImagemProduto imagem = produtoService.buscarImagemPorId(imagemId);
 
-            if (imagem == null || imagem.getCaminhoArquivo() == null) {
-                return ResponseEntity.notFound().build();
+            // Caso 1: Tentar obter do sistema de arquivos primeiro
+            if (imagem.getCaminhoArquivo() != null) {
+                Path caminhoArquivo = Paths.get(imagem.getCaminhoArquivo());
+                Resource resource = new UrlResource(caminhoArquivo.toUri());
+
+                if (resource.exists() && resource.isReadable()) {
+                    return construirResposta(imagem, resource);
+                }
+                log.warn("Arquivo físico não encontrado em: {}", caminhoArquivo);
             }
 
-            // CORREÇÃO PRINCIPAL: Usar o diretório base configurado
-            Path caminhoAbsoluto = Paths.get(diretorioBase).resolve(imagem.getCaminhoArquivo());
-            Resource resource = new UrlResource(caminhoAbsoluto.toUri());
-
-            if (!resource.exists() || !resource.isReadable()) {
-                log.warn("Imagem não encontrada: {}", caminhoAbsoluto);
-                return ResponseEntity.notFound().build();
+            // Caso 2: Fallback para imagem no banco de dados (BLOB)
+            if (imagem.getImagem() != null && imagem.getImagem().length > 0) {
+                ByteArrayResource resource = new ByteArrayResource(imagem.getImagem());
+                return construirResposta(imagem, resource);
             }
 
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(imagem.getTipoMime()))
-                    .header(HttpHeaders.CONTENT_DISPOSITION,
-                            "inline; filename=\"" + imagem.getNomeArquivo() + "\"")
-                    .body(resource);
+            // Caso 3: Imagem não encontrada em nenhum local
+            log.warn("Imagem ID {} não encontrada no sistema de arquivos nem no banco de dados", imagemId);
+            return ResponseEntity.notFound().build();
+
         } catch (Exception e) {
             log.error("Erro ao carregar imagem ID: {}", imagemId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    @PostMapping("/salvar")
-    public String salvarProduto(
-            @ModelAttribute Produto produto,
-            BindingResult result,
-            @RequestParam("imagem") MultipartFile imagem,
-            @RequestParam(value = "imagemPrincipal", defaultValue = "false") boolean imagemPrincipal,
-            Model model,
-            RedirectAttributes redirectAttributes) {
-
-        // Validação manual da imagem
-        if (imagem == null || imagem.isEmpty()) {
-            result.rejectValue("imagens", "imagem.vazia", "Selecione uma imagem");
-        } else if (!isTipoImagemValido(imagem.getContentType())) {
-            result.rejectValue("imagens", "imagem.tipo.invalido", "Tipo de imagem não suportado");
-        }
-
-        if (result.hasErrors()) {
-            return "cadastroProduto";
-        }
-
-        try {
-            produtoService.salvarProduto(produto, imagem, imagemPrincipal);
-            redirectAttributes.addFlashAttribute("success", "Produto cadastrado com sucesso!");
-            return "redirect:/produtos";
-        } catch (Exception e) {
-            model.addAttribute("error", "Erro ao cadastrar produto: " + e.getMessage());
-            return "cadastroProduto";
-        }
+    // Método auxiliar para construir a resposta
+    private ResponseEntity<Resource> construirResposta(ImagemProduto imagem, Resource resource) {
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(imagem.getTipoMime()))
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename=\"" + imagem.getNomeArquivo() + "\"")
+                .body(resource);
     }
 
     @PostMapping("/{id}/imagem")
@@ -140,7 +195,7 @@ public class ProdutoController {
             @RequestParam(value = "imagemPrincipal", defaultValue = "false") boolean imagemPrincipal) {
 
         try {
-            if (file == null || file.isEmpty()) {
+            if (file.isEmpty()) {
                 return ResponseEntity.badRequest()
                         .body("Por favor, selecione um arquivo de imagem válido");
             }
@@ -154,15 +209,12 @@ public class ProdutoController {
             return ResponseEntity.ok("Imagem salva com sucesso como " +
                     (imagemPrincipal ? "imagem principal" : "imagem secundária"));
 
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Erro ao salvar imagem: " + e.getMessage());
         }
     }
 
-    /**
-     * Valida se o tipo MIME é uma imagem suportada
-     */
     private boolean isTipoImagemValido(String contentType) {
         if (contentType == null) {
             return false;

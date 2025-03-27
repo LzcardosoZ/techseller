@@ -4,140 +4,158 @@ import br.com.techseller.techsellers.entity.ImagemProduto;
 import br.com.techseller.techsellers.entity.Produto;
 import br.com.techseller.techsellers.repository.ImagemProdutoRepository;
 import br.com.techseller.techsellers.repository.ProdutoRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
+@Slf4j
 public class ProdutoServiceImpl implements ProdutoService {
 
-    @Autowired
-    private ProdutoRepository produtoRepository;
+    private final ProdutoRepository produtoRepository;
+    private final ImagemProdutoRepository imagemProdutoRepository;
+
+    @Value("${app.upload.dir}")
+    private String diretorioBase;
 
     @Autowired
-    private ImagemProdutoRepository imagemProdutoRepository;
+    public ProdutoServiceImpl(ProdutoRepository produtoRepository,
+                              ImagemProdutoRepository imagemProdutoRepository) {
+        this.produtoRepository = produtoRepository;
+        this.imagemProdutoRepository = imagemProdutoRepository;
+    }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Produto> listarProdutos(String filtro) {
-        List<Produto> produtos;
-        if (filtro != null && !filtro.isEmpty()) {
-            // Use the new method to search by name or ID
-            produtos = produtoRepository.findByNomeOrId(filtro);
-        } else {
-            produtos = produtoRepository.findAll();
+        try {
+            List<Produto> produtos = (filtro != null && !filtro.isEmpty())
+                    ? produtoRepository.findByNomeOrId(filtro)
+                    : produtoRepository.findAll();
+
+            produtos.forEach(produto -> {
+                List<ImagemProduto> imagens = imagemProdutoRepository.findByProdutoProdutoId(produto.getProdutoId());
+                produto.setImagens(imagens != null ? imagens : List.of());
+            });
+
+            return produtos;
+        } catch (Exception e) {
+            log.error("Erro ao listar produtos", e);
+            throw new RuntimeException("Erro ao listar produtos: " + e.getMessage(), e);
         }
-
-        // Carrega as imagens para cada produto
-        produtos.forEach(produto -> {
-            List<ImagemProduto> imagens = imagemProdutoRepository.findByProdutoProdutoId(produto.getProdutoId());
-            produto.setImagens(imagens);
-
-            // Garante que a lista de imagens nunca seja nula
-            if (produto.getImagens() == null) {
-                produto.setImagens(new ArrayList<>());
-            }
-        });
-
-        return produtos;
     }
 
     @Override
     @Transactional
     public void salvarProduto(Produto produto, MultipartFile imagem, boolean imagemPrincipal) {
-        // Validação básica do produto
         if (produto == null) {
             throw new IllegalArgumentException("Produto não pode ser nulo");
         }
 
-        // Validação da imagem (obrigatória conforme regra de negócio)
         if (imagem == null || imagem.isEmpty()) {
             throw new IllegalArgumentException("O produto deve ter pelo menos uma imagem");
         }
 
         try {
-            // Definir valores padrão
-            if (produto.getAvaliacao() == null) {
-                produto.setAvaliacao(new BigDecimal("0.0"));
-            }
-            if (produto.getAtivo() == null) {
-                produto.setAtivo(true);
-            }
+            // Configura valores padrão
+            produto.setAvaliacao(produto.getAvaliacao() != null ? produto.getAvaliacao() : BigDecimal.ZERO);
+            produto.setAtivo(produto.getAtivo() != null ? produto.getAtivo() : true);
 
-            // Salva o produto primeiro para obter o ID
-            produto = produtoRepository.save(produto);
+            Produto produtoSalvo = produtoRepository.save(produto);
+            salvarImagemComTratamento(produtoSalvo, imagem, imagemPrincipal);
 
-            // Cria e configura a imagem
-            ImagemProduto imagemProduto = ImagemProduto.builder()
-                    .imagem(imagem.getBytes())
-                    .imagemPrincipal(imagemPrincipal)
-                    .produto(produto)
-                    .build();
-
-            // Salva a imagem
-            imagemProdutoRepository.save(imagemProduto);
-
-        } catch (IOException e) {
-            throw new RuntimeException("Erro ao processar imagem do produto: " + e.getMessage(), e);
         } catch (DataIntegrityViolationException e) {
-            throw new RuntimeException("Erro de integridade ao salvar produto: " + e.getMessage(), e);
+            log.error("Erro de integridade ao salvar produto", e);
+            throw new RuntimeException("Erro ao salvar produto: dados inválidos ou duplicados", e);
+        } catch (Exception e) {
+            log.error("Erro ao salvar produto", e);
+            throw new RuntimeException("Erro ao salvar produto", e);
         }
     }
 
     @Override
-    public Optional<Produto> buscarPorId(Long produto_id) {
-        return produtoRepository.findById(produto_id);
+    @Transactional(readOnly = true)
+    public Optional<Produto> buscarPorId(Long produtoId) {
+        try {
+            if (produtoId == null || produtoId <= 0) {
+                throw new IllegalArgumentException("ID do produto inválido");
+            }
+
+            Optional<Produto> produtoOpt = produtoRepository.findById(produtoId);
+
+            produtoOpt.ifPresent(produto -> {
+                List<ImagemProduto> imagens = imagemProdutoRepository.findByProdutoProdutoId(produtoId);
+                produto.setImagens(imagens != null ? imagens : List.of());
+            });
+
+            return produtoOpt;
+
+        } catch (Exception e) {
+            log.error("Erro ao buscar produto por ID: {}", produtoId, e);
+            throw new RuntimeException("Erro ao buscar produto: " + e.getMessage(), e);
+        }
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ImagemProduto buscarImagemPorId(Long imagemId) {
         return imagemProdutoRepository.findById(imagemId)
-                .orElseThrow(() -> new RuntimeException("Imagem não encontrada"));
+                .orElseThrow(() -> {
+                    log.warn("Imagem não encontrada com ID: {}", imagemId);
+                    return new RuntimeException("Imagem não encontrada");
+                });
     }
 
     @Override
-    public void inativarProduto(Long produto_id) {
-        produtoRepository.findById(produto_id).ifPresent(produto -> {
-            produto.setAtivo(false);
-            produtoRepository.save(produto);
-        });
+    @Transactional
+    public void inativarProduto(Long produtoId) {
+        alterarStatusProduto(produtoId, false);
     }
 
     @Override
-    public void reativarProduto(Long produto_id) {
-        produtoRepository.findById(produto_id).ifPresent(produto -> {
-            produto.setAtivo(true);
-            produtoRepository.save(produto);
-        });
+    @Transactional
+    public void reativarProduto(Long produtoId) {
+        alterarStatusProduto(produtoId, true);
     }
 
     @Override
+    @Transactional
     public void salvarImagem(Long produtoId, MultipartFile file, boolean imagemPrincipal) {
         try {
             Produto produto = produtoRepository.findById(produtoId)
                     .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
-            ImagemProduto imagemProduto = new ImagemProduto();
-            imagemProduto.setProduto(produto);
-            imagemProduto.setImagem(file.getBytes());
-            imagemProduto.setImagemPrincipal(imagemPrincipal);
+            salvarImagemComTratamento(produto, file, imagemPrincipal);
 
-            imagemProdutoRepository.save(imagemProduto);
-        } catch (IOException e) {
-            throw new RuntimeException("Erro ao salvar imagem: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("Erro ao salvar imagem para o produto ID: {}", produtoId, e);
+            throw new RuntimeException("Erro ao salvar imagem", e);
         }
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ImagemProduto> listarImagensPorProduto(Long produtoId) {
-        return imagemProdutoRepository.findByProdutoProdutoId(produtoId);
+        try {
+            return imagemProdutoRepository.findByProdutoProdutoId(produtoId);
+        } catch (Exception e) {
+            log.error("Erro ao listar imagens do produto ID: {}", produtoId, e);
+            throw new RuntimeException("Erro ao listar imagens", e);
+        }
     }
 
     @Override
@@ -147,27 +165,75 @@ public class ProdutoServiceImpl implements ProdutoService {
             throw new IllegalArgumentException("ID do produto é obrigatório para edição");
         }
 
-        // Verifica se o produto existe
-        Produto produtoExistente = produtoRepository.findById(produto.getProdutoId())
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+        return produtoRepository.findById(produto.getProdutoId())
+                .map(produtoExistente -> {
+                    atualizarCamposProduto(produtoExistente, produto);
+                    return produtoRepository.save(produtoExistente);
+                })
+                .orElseThrow(() -> {
+                    log.error("Produto não encontrado para edição ID: {}", produto.getProdutoId());
+                    return new RuntimeException("Produto não encontrado");
+                });
+    }
 
-        // Atualiza os campos do produto existente
-        produtoExistente.setNome(produto.getNome());
-        produtoExistente.setDescricaoDetalhada(produto.getDescricaoDetalhada());
-        produtoExistente.setPreco(produto.getPreco());
-        produtoExistente.setQuantidadeEstoque(produto.getQuantidadeEstoque());
+    // Métodos auxiliares privados
+    private void alterarStatusProduto(Long produtoId, boolean ativo) {
+        produtoRepository.findById(produtoId).ifPresentOrElse(
+                produto -> {
+                    produto.setAtivo(ativo);
+                    produtoRepository.save(produto);
+                    log.info("Produto ID: {} {} com sucesso", produtoId, ativo ? "reativado" : "inativado");
+                },
+                () -> {
+                    log.warn("Tentativa de alterar status de produto não encontrado ID: {}", produtoId);
+                    throw new RuntimeException("Produto não encontrado");
+                }
+        );
+    }
 
-        // Preserve avaliacao if not set
-        if (produto.getAvaliacao() != null) {
-            produtoExistente.setAvaliacao(produto.getAvaliacao());
+    private void salvarImagemComTratamento(Produto produto, MultipartFile file, boolean imagemPrincipal) throws IOException {
+        // 1. Desmarcar outras imagens como não principais se necessário
+        if (imagemPrincipal) {
+            imagemProdutoRepository.updateAllImagensNotPrincipal(produto.getProdutoId());
         }
 
-        // Mantém o status de ativo como estava, a menos que seja explicitamente alterado
-        if (produto.getAtivo() != null) {
-            produtoExistente.setAtivo(produto.getAtivo());
+        // 2. Criar diretório se não existir
+        Path diretorioProduto = Paths.get(diretorioBase, "produtos", produto.getProdutoId().toString());
+        Files.createDirectories(diretorioProduto);
+
+        // 3. Gerar nome único para o arquivo
+        String nomeArquivo = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+        Path destino = diretorioProduto.resolve(nomeArquivo);
+
+        // 4. Salvar arquivo fisicamente
+        Files.copy(file.getInputStream(), destino, StandardCopyOption.REPLACE_EXISTING);
+
+        // 5. Criar e salvar a entidade ImagemProduto
+        ImagemProduto imagemProduto = new ImagemProduto();
+        imagemProduto.setProduto(produto);
+        imagemProduto.setImagem(file.getBytes()); // Armazena no banco também (opcional)
+        imagemProduto.setImagemPrincipal(imagemPrincipal);
+        imagemProduto.setTipoMime(file.getContentType());
+        imagemProduto.setNomeArquivo(file.getOriginalFilename());
+        imagemProduto.setTamanho(file.getSize());
+        imagemProduto.setCaminhoArquivo(destino.toString()); // Armazena o caminho completo
+
+        imagemProdutoRepository.save(imagemProduto);
+        log.debug("Imagem salva para o produto ID: {}", produto.getProdutoId());
+    }
+
+    private void atualizarCamposProduto(Produto existente, Produto novo) {
+        existente.setNome(novo.getNome());
+        existente.setDescricaoDetalhada(novo.getDescricaoDetalhada());
+        existente.setPreco(novo.getPreco());
+        existente.setQuantidadeEstoque(novo.getQuantidadeEstoque());
+
+        if (novo.getAvaliacao() != null) {
+            existente.setAvaliacao(novo.getAvaliacao());
         }
 
-        // Salva e retorna o produto atualizado
-        return produtoRepository.save(produtoExistente);
+        if (novo.getAtivo() != null) {
+            existente.setAtivo(novo.getAtivo());
+        }
     }
 }
