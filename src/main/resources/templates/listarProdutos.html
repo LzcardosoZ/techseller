@@ -5,8 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <title>Listar Produtos</title>
+    <style>
+        .carousel-control-prev-icon, .carousel-control-next-icon {
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            padding: 15px;
+        }
+        .carousel-indicators button {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .img-thumbnail {
+            max-height: 150px;
+            object-fit: contain;
+        }
+        .product-card {
+            transition: transform 0.3s ease;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 0.35em 0.65em;
+        }
+        .no-image-placeholder {
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+        }
+        .carousel-item img {
+            height: 200px;
+            object-fit: contain;
+            width: 100%;
+        }
+    </style>
 </head>
 <body>
 
@@ -24,64 +64,117 @@
 <!-- Conteúdo Principal -->
 <div class="container mt-4">
     <!-- Cabeçalho -->
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="fw-bold text-danger">Produtos</h4>
-        <a th:href="@{/produtos/novo}" class="btn btn-success">+ Novo Produto</a>
+        <a th:href="@{/produtos/novo}" class="btn btn-success">
+            <i class="bi bi-plus-lg"></i> Novo Produto
+        </a>
     </div>
 
     <!-- Barra de Pesquisa -->
-    <div class="mt-3 mb-3">
-        <form th:action="@{/produtos}" method="get">
-            <div class="input-group">
-                <input type="text" class="form-control" name="filtro" placeholder="Pesquisar" th:value="${filtro}"/>
-                <button class="btn btn-danger" type="submit">🔍</button>
-            </div>
-        </form>
+    <div class="card mb-4">
+        <div class="card-body">
+            <form th:action="@{/produtos}" method="get">
+                <div class="input-group">
+                    <input type="text" class="form-control" name="filtro" placeholder="Pesquisar por nome ou ID" th:value="${filtro}"/>
+                    <button class="btn btn-danger" type="submit">
+                        <i class="bi bi-search"></i> Pesquisar
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <!-- Tabela de Produtos -->
-    <div class="table-responsive">
-        <table class="table table-bordered">
-            <thead class="table-dark text-light">
-            <tr>
-                <th>ID</th>
-                <th>Nome</th>
-                <th>Quantidade</th>
-                <th>Valor</th>
-                <th>Status</th>
-                <th>Ações</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="produto : ${produtos}">
-                <td th:text="${produto.produtoId}"></td>
-                <td th:text="${produto.nome}"></td>
-                <td th:text="${produto.quantidadeEstoque}"></td>
-                <td th:text="'R$ ' + ${#numbers.formatDecimal(produto.preco, 1, 2, 'POINT')}"></td>
-                <td>
-                    <span th:class="${produto.ativo} ? 'text-success fw-bold' : 'text-danger fw-bold'"
-                          th:text="${produto.ativo} ? 'Ativo' : 'Inativo'"></span>
-                </td>
-                <td>
-                    <a th:href="@{/produtos/editar/{id}(id=${produto.produtoId})}" class="btn btn-success btn-sm">✏️ Editar</a>
-                    <button class="btn btn-primary btn-sm visualizar-produto"
-                            data-bs-toggle="modal"
-                            data-bs-target="#modalProduto"
-                            th:attr="data-id=${produto.produtoId},
-                data-nome=${produto.nome},
-                data-quantidade=${produto.quantidadeEstoque},
-                data-preco=${#numbers.formatDecimal(produto.preco, 1, 2, 'POINT')},
-                data-status=${produto.ativo},
-                data-avaliacao=${produto.avaliacao != null ? produto.avaliacao : 0},
-                data-imagem-id=${produto.imagens?.size() > 0 ? produto.imagens[0].id : ''}">
-                        👁️ Visualizar
+    <!-- Lista de Produtos -->
+    <div class="row">
+        <div th:each="produto : ${produtos}" class="col-md-4 mb-4">
+            <div class="card product-card h-100">
+                <!-- Carrossel de Imagens -->
+                <div th:if="${produto.imagens != null and !produto.imagens.isEmpty()}"
+                     id="carousel-${produto.produtoId}" class="carousel slide" data-bs-ride="false">
+                    <div class="carousel-indicators">
+                        <button th:each="img, iter : ${produto.imagens}"
+                                type="button"
+                                data-bs-target="#carousel-${produto.produtoId}"
+                                th:data-bs-slide-to="${iter.index}"
+                                th:class="${iter.index == 0} ? 'active' : ''"
+                                th:attr="aria-label='Slide ${iter.index + 1}'"></button>
+                    </div>
+                    <div class="carousel-inner">
+                        <div th:each="img, iter : ${produto.imagens}"
+                             th:class="${iter.index == 0} ? 'carousel-item active' : 'carousel-item'">
+                            <img th:src="@{'/produtos/imagem/' + ${img.id}}"
+                                 class="d-block w-100 img-thumbnail"
+                                 th:alt="${produto.nome + ' - Imagem ' + (iter.index + 1)}"
+                                 onerror="this.onerror=null;this.src='/img/sem-imagem.jpg';">
+                        </div>
+                    </div>
+                    <button class="carousel-control-prev" type="button"
+                            data-bs-target="#carousel-${produto.produtoId}" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Anterior</span>
                     </button>
-                    <a th:if="${produto.ativo}" th:href="@{/produtos/inativar/{id}(id=${produto.produtoId})}" class="btn btn-warning btn-sm">❌ Inativar</a>
-                    <a th:unless="${produto.ativo}" th:href="@{/produtos/reativar/{id}(id=${produto.produtoId})}" class="btn btn-info btn-sm">✅ Reativar</a>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+                    <button class="carousel-control-next" type="button"
+                            data-bs-target="#carousel-${produto.produtoId}" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Próximo</span>
+                    </button>
+                </div>
+
+                <!-- Imagem padrão se não houver imagens -->
+                <div th:unless="${produto.imagens != null and !produto.imagens.isEmpty()}"
+                     class="no-image-placeholder">
+                    <div class="text-center">
+                        <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2">Sem imagens</p>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <h5 class="card-title" th:text="${produto.nome}"></h5>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-success fw-bold"
+                              th:text="'R$ ' + ${#numbers.formatDecimal(produto.preco, 1, 2, 'POINT')}"></span>
+                        <span th:class="${produto.ativo} ? 'badge bg-success status-badge' : 'badge bg-danger status-badge'"
+                              th:text="${produto.ativo} ? 'Ativo' : 'Inativo'"></span>
+                    </div>
+                    <p class="card-text text-muted small mb-3" th:text="${produto.descricaoDetalhada.length() > 100} ?
+                        ${produto.descricaoDetalhada.substring(0, 100) + '...'} : ${produto.descricaoDetalhada}"></p>
+
+                    <div class="d-flex justify-content-between">
+                        <a th:href="@{/produtos/editar/{id}(id=${produto.produtoId})}"
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-pencil"></i> Editar
+                        </a>
+                        <button class="btn btn-sm btn-outline-secondary visualizar-produto"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modalProduto"
+                                th:data-id="${produto.produtoId}"
+                                th:data-nome="${produto.nome}"
+                                th:data-descricao="${produto.descricaoDetalhada}"
+                                th:data-quantidade="${produto.quantidadeEstoque}"
+                                th:data-preco="${#numbers.formatDecimal(produto.preco, 1, 2, 'POINT')}"
+                                th:data-status="${produto.ativo}"
+                                th:data-avaliacao="${produto.avaliacao != null ? produto.avaliacao : 0}"
+                                th:attr="data-imagens=${#strings.listJoin(produto.imagens.![id], ',')}">
+                            <i class="bi bi-eye"></i> Detalhes
+                        </button>
+                        <form th:if="${produto.ativo}" th:action="@{/produtos/inativar/{id}(id=${produto.produtoId})}"
+                              method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-x-circle"></i> Inativar
+                            </button>
+                        </form>
+                        <form th:unless="${produto.ativo}" th:action="@{/produtos/reativar/{id}(id=${produto.produtoId})}"
+                              method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-info">
+                                <i class="bi bi-check-circle"></i> Reativar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Modal para exibir detalhes do produto -->
@@ -95,12 +188,26 @@
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6">
-                            <img id="modalImagem" src="" class="img-fluid rounded mb-3" style="max-height: 300px;" alt="Imagem do Produto">
+                            <!-- Carrossel no Modal -->
+                            <div id="modalCarousel" class="carousel slide" data-bs-ride="carousel">
+                                <div class="carousel-indicators" id="modalCarouselIndicators"></div>
+                                <div class="carousel-inner" id="modalCarouselInner"></div>
+                                <button class="carousel-control-prev" type="button"
+                                        data-bs-target="#modalCarousel" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Anterior</span>
+                                </button>
+                                <button class="carousel-control-next" type="button"
+                                        data-bs-target="#modalCarousel" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Próximo</span>
+                                </button>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <h4 id="modalNome" class="mb-3"></h4>
+                            <p id="modalDescricao" class="text-muted mb-4"></p>
 
-                            <!-- Avaliação em estrelas com texto "Avaliação:" -->
                             <div class="mb-3">
                                 <strong>Avaliação:</strong>
                                 <div class="rating d-inline-block ms-2">
@@ -109,19 +216,21 @@
                                 </div>
                             </div>
 
-                            <!-- Preço -->
                             <div class="mb-3">
                                 <strong>Preço:</strong>
                                 <span id="modalPreco" class="text-success fw-bold ms-2"></span>
                             </div>
 
-                            <!-- Quantidade em estoque -->
                             <div class="mb-4">
                                 <strong>Quantidade disponível:</strong>
                                 <span id="modalQuantidade" class="ms-2"></span>
                             </div>
 
-                            <!-- Botão de Comprar -->
+                            <div class="mb-3">
+                                <strong>Status:</strong>
+                                <span id="modalStatus" class="badge ms-2"></span>
+                            </div>
+
                             <button class="btn btn-success btn-lg w-100">
                                 <i class="fas fa-shopping-cart me-2"></i> Comprar
                             </button>
@@ -138,51 +247,144 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // 1. Inicialização dos carrosséis na página principal
+        document.querySelectorAll('.product-card .carousel').forEach(carouselEl => {
+            new bootstrap.Carousel(carouselEl, {
+                interval: false,  // Desativa o auto-scroll
+                wrap: true        // Permite navegação circular
+            });
+
+            // Adiciona fallback manual para navegação
+            const carouselId = carouselEl.id;
+            const prevButton = document.querySelector(`[data-bs-target="#${carouselId}"].carousel-control-prev`);
+            const nextButton = document.querySelector(`[data-bs-target="#${carouselId}"].carousel-control-next`);
+
+            if (prevButton) {
+                prevButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const carousel = bootstrap.Carousel.getInstance(carouselEl);
+                    carousel.prev();
+                });
+            }
+
+            if (nextButton) {
+                nextButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const carousel = bootstrap.Carousel.getInstance(carouselEl);
+                    carousel.next();
+                });
+            }
+        });
+
+        // 2. Configuração do Modal (código existente)
         const modal = new bootstrap.Modal(document.getElementById('modalProduto'));
 
         document.querySelectorAll('.visualizar-produto').forEach(button => {
             button.addEventListener('click', function() {
+                // Limpa o modal antes de carregar novos dados
+                document.getElementById('modalCarouselInner').innerHTML = '';
+                document.getElementById('modalCarouselIndicators').innerHTML = '';
+
                 // Dados básicos
                 document.getElementById('modalNome').textContent = this.getAttribute('data-nome');
+                document.getElementById('modalDescricao').textContent = this.getAttribute('data-descricao');
                 document.getElementById('modalPreco').textContent = 'R$ ' + this.getAttribute('data-preco');
                 document.getElementById('modalQuantidade').textContent = this.getAttribute('data-quantidade');
+
+                // Status
+                const status = this.getAttribute('data-status') === 'true';
+                const statusElement = document.getElementById('modalStatus');
+                statusElement.textContent = status ? 'Ativo' : 'Inativo';
+                statusElement.className = status ? 'badge bg-success' : 'badge bg-danger';
 
                 // Avaliação em estrelas
                 const avaliacao = parseFloat(this.getAttribute('data-avaliacao')) || 0;
                 const ratingStarsContainer = document.getElementById('modalRatingStars');
                 ratingStarsContainer.innerHTML = '';
-
-                // Texto da avaliação
                 document.getElementById('modalAvaliacao').textContent = avaliacao.toFixed(1);
 
-                // Adicionar estrelas
                 for (let i = 1; i <= 5; i++) {
                     const star = document.createElement('i');
                     if (i <= Math.floor(avaliacao)) {
-                        star.className = 'fas fa-star text-warning'; // Estrela cheia amarela
+                        star.className = 'fas fa-star text-warning';
                     } else if (i - 1 < avaliacao) {
-                        star.className = 'fas fa-star-half-alt text-warning'; // Meia estrela amarela
+                        star.className = 'fas fa-star-half-alt text-warning';
                     } else {
-                        star.className = 'far fa-star text-warning'; // Estrela vazia amarela
+                        star.className = 'far fa-star text-warning';
                     }
                     ratingStarsContainer.appendChild(star);
                 }
 
-                // Imagem do produto
-                const imagemId = this.getAttribute('data-imagem-id');
-                const imagemElement = document.getElementById('modalImagem');
+                // Carrossel de imagens
+                const imagensIds = this.getAttribute('data-imagens') ?
+                    this.getAttribute('data-imagens').split(',').filter(id => id.trim() !== '') : [];
 
-                if (imagemId) {
-                    imagemElement.src = '/produtos/imagem/' + imagemId;
-                    imagemElement.style.display = 'block';
+                const carouselInner = document.getElementById('modalCarouselInner');
+                const carouselIndicators = document.getElementById('modalCarouselIndicators');
+
+                if (imagensIds.length > 0) {
+                    imagensIds.forEach((id, index) => {
+                        // Adiciona indicador
+                        const indicator = document.createElement('button');
+                        indicator.type = 'button';
+                        indicator.setAttribute('data-bs-target', '#modalCarousel');
+                        indicator.setAttribute('data-bs-slide-to', index);
+                        indicator.className = index === 0 ? 'active' : '';
+                        indicator.setAttribute('aria-current', index === 0 ? 'true' : 'false');
+                        indicator.setAttribute('aria-label', 'Slide ' + (index + 1));
+                        carouselIndicators.appendChild(indicator);
+
+                        // Adiciona item do carrossel
+                        const carouselItem = document.createElement('div');
+                        carouselItem.className = index === 0 ? 'carousel-item active' : 'carousel-item';
+
+                        const img = document.createElement('img');
+                        img.src = '/produtos/imagem/' + id.trim();
+                        img.className = 'd-block w-100 img-fluid rounded';
+                        img.style.maxHeight = '400px';
+                        img.style.objectFit = 'contain';
+                        img.alt = 'Imagem do produto ' + document.getElementById('modalNome').textContent;
+
+                        img.onerror = function() {
+                            this.onerror = null;
+                            this.src = '/img/sem-imagem.jpg';
+                            console.error('Erro ao carregar imagem:', id);
+                        };
+
+                        carouselItem.appendChild(img);
+                        carouselInner.appendChild(carouselItem);
+                    });
+
+                    // Inicializa o carrossel do modal
+                    const modalCarousel = new bootstrap.Carousel(document.getElementById('modalCarousel'), {
+                        interval: false,
+                        wrap: true
+                    });
                 } else {
-                    imagemElement.style.display = 'none';
+                    // Caso não haja imagens
+                    const noImageItem = document.createElement('div');
+                    noImageItem.className = 'carousel-item active text-center py-5';
+                    noImageItem.innerHTML = `
+                        <i class="bi bi-image text-muted" style="font-size: 5rem;"></i>
+                        <p class="text-muted mt-3">Este produto não possui imagens</p>
+                    `;
+                    carouselInner.appendChild(noImageItem);
                 }
 
                 modal.show();
             });
         });
+
+        // 3. Adiciona CSRF token aos formulários de inativar/reativar
+        document.querySelectorAll('form[method="post"]').forEach(form => {
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_csrf';
+            csrfInput.value = document.querySelector('meta[name="_csrf"]').content;
+            form.appendChild(csrfInput);
+        });
     });
 </script>
+
 </body>
 </html>

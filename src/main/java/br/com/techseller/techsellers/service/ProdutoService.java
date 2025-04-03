@@ -2,8 +2,10 @@ package br.com.techseller.techsellers.service;
 
 import br.com.techseller.techsellers.entity.ImagemProduto;
 import br.com.techseller.techsellers.entity.Produto;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,6 +17,12 @@ public interface ProdutoService {
      * @return Lista de produtos
      */
     List<Produto> listarProdutos(String filtro);
+
+    @Transactional
+    Produto salvarProduto(Produto produto, MultipartFile[] imagens) throws IOException;
+
+    @Transactional
+    void editarProduto(Produto produto, MultipartFile[] novasImagens, List<Long> imagensRemovidas);
 
     /**
      * Busca um produto por ID
@@ -46,6 +54,9 @@ public interface ProdutoService {
      */
     ImagemProduto buscarImagemPorId(Long imagemId);
 
+    @Transactional(readOnly = true)
+    Optional<Produto> findByIdWithImagens(Long produtoId);
+
     /**
      * Inativa um produto
      * @param produto_id ID do produto
@@ -66,6 +77,9 @@ public interface ProdutoService {
      */
     void salvarImagem(Long produtoId, MultipartFile file, boolean imagemPrincipal);
 
+    @Transactional
+    void definirImagemComoPrincipal(Long imagemId);
+
     /**
      * Lista todas as imagens de um produto
      * @param produtoId ID do produto
@@ -79,4 +93,10 @@ public interface ProdutoService {
      */
     @Deprecated
     Produto editarProduto(Produto produto);
+
+    @Transactional
+    void removerImagem(Long imagemId);
+
+    @Transactional
+    void reordenarImagens(Long produtoId, List<Long> novaOrdemIds);
 }

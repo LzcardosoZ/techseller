@@ -5,6 +5,8 @@ import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import java.util.UUID;
+
 @Entity
 @Table(name = "IMAGEM_PRODUTO")
 @Data
@@ -28,7 +30,7 @@ public class ImagemProduto {
     private Boolean imagemPrincipal;
 
     // Novos campos para armazenamento híbrido
-    @Column(nullable = true, length = 255)
+    @Column(nullable = false, length = 255)
     private String caminhoArquivo;
 
     @Column(nullable = false, length = 100)
@@ -39,6 +41,9 @@ public class ImagemProduto {
 
     @Column(nullable = false, length = 50)
     private String tipoMime;
+
+    @Column(nullable = false)
+    private Integer ordem; // Novo campo para ordenação das imagens
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
@@ -51,7 +56,7 @@ public class ImagemProduto {
     @EqualsAndHashCode.Exclude
     private Produto produto;
 
-
+    // Método para definir o produto mantendo a consistência bidirecional
     public void setProduto(Produto produto) {
         if (this.produto != null) {
             this.produto.getImagens().remove(this);
@@ -62,8 +67,14 @@ public class ImagemProduto {
         }
     }
 
-
+    // Método para obter a extensão do arquivo
     public String getExtensao() {
         return nomeArquivo.substring(nomeArquivo.lastIndexOf(".") + 1);
+    }
+
+    // Método para gerar um nome de arquivo único
+    public static String gerarNomeUnico(String nomeOriginal) {
+        String extensao = nomeOriginal.substring(nomeOriginal.lastIndexOf("."));
+        return UUID.randomUUID().toString() + extensao;
     }
 }

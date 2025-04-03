@@ -46,11 +46,60 @@
         .btn-secondary:hover {
             background-color: #5a6268;
         }
-        .current-image {
-            border: 2px solid #dee2e6;
-            border-radius: 8px;
-            padding: 5px;
-            margin: 10px 0;
+        .image-preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .image-preview-item {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .image-preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .remove-image-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 25px;
+            height: 25px;
+            background-color: rgba(255,0,0,0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .main-image-badge {
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            background-color: rgba(0,100,0,0.7);
+            color: white;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .set-main-btn {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background-color: rgba(0,0,255,0.7);
+            color: white;
+            border: none;
+            border-radius: 3px;
+            font-size: 12px;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -77,81 +126,77 @@
     <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
     <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
 
-    <form th:action="@{/produtos/salvar}" method="post" th:object="${produto}" enctype="multipart/form-data">
+    <form th:action="@{/produtos/editar/{id}(id=${produto.produtoId})}" method="post" th:object="${produto}" enctype="multipart/form-data">
         <input type="hidden" th:field="*{produtoId}">
 
         <div class="mb-3">
             <label class="form-label">Nome do Produto:</label>
             <input type="text" class="form-control" th:field="*{nome}" required>
-            <div class="invalid-feedback">Por favor, insira o nome do produto</div>
         </div>
 
         <div class="mb-3">
             <label class="form-label">Preço:</label>
             <input type="number" class="form-control" th:field="*{preco}" step="0.01" min="0.01" required>
-            <div class="invalid-feedback">Insira um preço válido (mínimo R$ 0,01)</div>
         </div>
 
         <div class="mb-3">
             <label class="form-label">Quantidade em Estoque:</label>
             <input type="number" class="form-control" th:field="*{quantidadeEstoque}" min="0" required>
-            <div class="invalid-feedback">Quantidade não pode ser negativa</div>
         </div>
 
         <div class="mb-3">
             <label class="form-label">Descrição Detalhada:</label>
             <textarea class="form-control" th:field="*{descricaoDetalhada}" rows="4" required></textarea>
-            <div class="invalid-feedback">A descrição deve ter entre 10 e 2000 caracteres</div>
         </div>
 
         <div class="mb-3">
             <label class="form-label">Avaliação (0.5-5.0):</label>
             <input type="number" class="form-control" th:field="*{avaliacao}" step="0.1" min="0.5" max="5.0">
-            <div class="invalid-feedback">Avaliação deve ser entre 0.5 e 5.0</div>
         </div>
 
-        <!-- Seção de Imagens -->
+        <!-- Seção de Imagens Existentes -->
         <div class="mb-4">
-            <label class="form-label">Imagem Atual:</label>
-            <div th:if="${produto.imagens != null and !produto.imagens.isEmpty()}" class="current-image">
-                <img th:src="@{'/produtos/imagem/' + ${produto.imagens[0].id}}"
-                     alt="Imagem do Produto"
-                     class="img-fluid rounded"
-                     style="max-height: 300px;">
+            <label class="form-label">Imagens do Produto:</label>
+            <div th:if="${produto.imagens != null and !produto.imagens.isEmpty()}" class="image-preview-container">
+                <div th:each="imagem, iterStat : ${produto.imagens}" class="image-preview-item">
+                    <img th:src="@{'/produtos/imagem/' + ${imagem.id}}"
+                         alt="Imagem do produto"
+                         class="img-fluid">
+
+                    <input type="checkbox"
+                           th:id="'remove_' + ${imagem.id}"
+                           name="imagensRemovidas"
+                           th:value="${imagem.id}"
+                           style="display: none;">
+
+                    <button type="button" class="remove-image-btn"
+                            th:onclick="'document.getElementById(\'remove_' + ${imagem.id} + '\').checked = true; this.parentElement.style.display = \'none\';'">
+                        ×
+                    </button>
+
+                    <div th:if="${imagem.imagemPrincipal}" class="main-image-badge">
+                        Principal
+                    </div>
+
+                    <button th:unless="${imagem.imagemPrincipal}"
+                            type="button"
+                            class="set-main-btn"
+                            th:onclick="'setAsMain(' + ${imagem.id} + ')'">
+                        Tornar principal
+                    </button>
+                </div>
             </div>
             <div th:unless="${produto.imagens != null and !produto.imagens.isEmpty()}" class="text-muted">
                 Nenhuma imagem cadastrada
             </div>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Nova Imagem (Opcional):</label>
-            <input type="file" class="form-control" id="novaImagem" name="imagem" accept="image/*">
-            <div class="invalid-feedback">Formato de imagem inválido</div>
-        </div>
+        <!-- Seção para Adicionar Novas Imagens -->
+        <div class="mb-4">
+            <label class="form-label">Adicionar Mais Imagens:</label>
+            <input type="file" class="form-control" name="novasImagens" multiple accept="image/*">
 
-        <!-- Modal para visualização da nova imagem -->
-        <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#novaImagemModal">
-            Visualizar Nova Imagem
-        </button>
-
-        <div class="modal fade" id="novaImagemModal" tabindex="-1" aria-labelledby="novaImagemModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="novaImagemModalLabel">Pré-visualização da Nova Imagem</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div id="novaPreviewContainer" class="text-center">
-                            <img id="novaPreviewImagem" src="#" alt="Prévia da nova imagem" class="img-fluid rounded" style="max-height: 60vh;">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                    </div>
-                </div>
-            </div>
+            <div id="newImagesPreview" class="image-preview-container mt-3"></div>
         </div>
 
         <div class="mb-3 d-flex justify-content-between gap-3">
@@ -163,18 +208,28 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const novaImagemInput = document.getElementById("novaImagem");
-        const novaPreviewImagem = document.getElementById("novaPreviewImagem");
-        const novaPreviewContainer = document.getElementById("novaPreviewContainer");
+        // Pré-visualização de novas imagens
+        const fileInput = document.querySelector('input[name="novasImagens"]');
+        const previewContainer = document.getElementById('newImagesPreview');
 
-        // Atualiza a pré-visualização da nova imagem
-        novaImagemInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
+        fileInput.addEventListener('change', function(event) {
+            previewContainer.innerHTML = '';
+            const files = event.target.files;
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (!file.type.match('image.*')) continue;
+
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    novaPreviewImagem.src = e.target.result;
-                    novaPreviewContainer.style.display = 'block';
+                    const previewItem = document.createElement('div');
+                    previewItem.className = 'image-preview-item';
+
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+
+                    previewItem.appendChild(img);
+                    previewContainer.appendChild(previewItem);
                 }
                 reader.readAsDataURL(file);
             }
@@ -191,16 +246,18 @@
                 form.classList.add('was-validated');
             }, false);
         });
-
-        // Atualiza o status ativo/inativo
-        const statusSelect = document.getElementById("status");
-        if (statusSelect) {
-            statusSelect.addEventListener('change', function() {
-                const statusLabel = document.getElementById("statusLabel");
-                statusLabel.textContent = this.value === 'true' ? 'Ativo' : 'Inativo';
-            });
-        }
     });
+
+    function setAsMain(imagemId) {
+        fetch('/produtos/imagem/' + imagemId + '/principal', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        }).then(response => {
+            if (response.ok) {
+                location.reload(); // Recarrega a página para atualizar o status
+            }
+        });
+    }
 </script>
 
 </body>
