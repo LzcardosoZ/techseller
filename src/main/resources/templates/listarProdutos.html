@@ -156,7 +156,7 @@
                                 th:data-preco="${#numbers.formatDecimal(produto.preco, 1, 2, 'POINT')}"
                                 th:data-status="${produto.ativo}"
                                 th:data-avaliacao="${produto.avaliacao != null ? produto.avaliacao : 0}"
-                                th:attr="data-imagens=${#strings.listJoin(produto.imagens.![id], ',')}">
+                                th:attr="data-imagens=${#strings.listJoin(#lists.collect(produto.imagens, 'id'), ',')}">
                             <i class="bi bi-eye"></i> Detalhes
                         </button>
                         <form th:if="${produto.ativo}" th:action="@{/produtos/inativar/{id}(id=${produto.produtoId})}"
