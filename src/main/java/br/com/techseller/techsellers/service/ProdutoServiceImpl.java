@@ -300,18 +300,27 @@ public class ProdutoServiceImpl implements ProdutoService {
     }
 
     @Transactional
-    @Override
-    public void definirImagemComoPrincipal(Long imagemId) {
+    public void definirImagemComoPrincipal(Long imagemId, Long produtoId) {
+        // 1. Valida se a imagem existe e pertence ao produto
         ImagemProduto imagem = imagemProdutoRepository.findById(imagemId)
                 .orElseThrow(() -> new RuntimeException("Imagem não encontrada"));
 
-        imagemProdutoRepository.updateAllImagensNotPrincipal(imagem.getProduto().getProdutoId());
+        if (!imagem.getProduto().getProdutoId().equals(produtoId)) {
+            throw new RuntimeException("A imagem não pertence ao produto informado");
+        }
+
+        // 2. Remove status de principal de todas as imagens do produto
+        imagemProdutoRepository.updateAllImagensNotPrincipal(produtoId);
+
+        // 3. Define a nova imagem como principal
         imagem.setImagemPrincipal(true);
-        reordenarImagens(imagem.getProduto().getProdutoId(),
+        imagemProdutoRepository.save(imagem);
+
+        // 4. Reordena as imagens (se necessário)
+        reordenarImagens(produtoId,
                 reordenarComPrincipalPrimeiro(imagem.getProduto().getImagens(), imagemId));
 
-        log.info("Imagem ID {} definida como principal para o produto ID {}",
-                imagemId, imagem.getProduto().getProdutoId());
+        log.info("Imagem ID {} definida como principal para o produto ID {}", imagemId, produtoId);
     }
 
     @Override
@@ -461,6 +470,11 @@ public class ProdutoServiceImpl implements ProdutoService {
     @Override
     public void salvarImagem(Long produtoId, MultipartFile file, boolean imagemPrincipal) {
         throw new UnsupportedOperationException("Método não suportado");
+    }
+
+    @Override
+    public void definirImagemComoPrincipal(Long imagemId) {
+        
     }
 
     @Override

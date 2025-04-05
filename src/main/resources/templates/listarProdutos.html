@@ -86,7 +86,7 @@
     </div>
 
     <!-- Lista de Produtos -->
-    <div class="row">
+    <div class="row" id="lista-produtos">
         <div th:each="produto : ${produtos}" class="col-md-4 mb-4">
             <div class="card product-card h-100">
                 <!-- Carrossel de Imagens -->
@@ -146,19 +146,20 @@
                            class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-pencil"></i> Editar
                         </a>
+
+                        <!-- Botão de Detalhes -->
                         <button class="btn btn-sm btn-outline-secondary visualizar-produto"
-                                data-bs-toggle="modal"
-                                data-bs-target="#modalProduto"
-                                th:data-id="${produto.produtoId}"
-                                th:data-nome="${produto.nome}"
-                                th:data-descricao="${produto.descricaoDetalhada}"
-                                th:data-quantidade="${produto.quantidadeEstoque}"
-                                th:data-preco="${#numbers.formatDecimal(produto.preco, 1, 2, 'POINT')}"
-                                th:data-status="${produto.ativo}"
-                                th:data-avaliacao="${produto.avaliacao != null ? produto.avaliacao : 0}"
-                                th:attr="data-imagens=${#strings.listJoin(#lists.collect(produto.imagens, 'id'), ',')}">
+                                th:attr="data-id=${produto.produtoId},
+                data-nome=${produto.nome},
+                data-descricao=${produto.descricaoDetalhada},
+                data-quantidade=${produto.quantidadeEstoque},
+                data-preco=${#numbers.formatDecimal(produto.preco, 1, 2, 'POINT')},
+                data-status=${produto.ativo},
+                data-avaliacao=${produto.avaliacao != null ? produto.avaliacao : 0},
+                data-imagens=${#strings.listJoin(produto.imagens.![id], ',')}">
                             <i class="bi bi-eye"></i> Detalhes
                         </button>
+
                         <form th:if="${produto.ativo}" th:action="@{/produtos/inativar/{id}(id=${produto.produtoId})}"
                               method="post" class="d-inline">
                             <button type="submit" class="btn btn-sm btn-outline-warning">
@@ -245,16 +246,132 @@
     </div>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // 1. Inicialização dos carrosséis na página principal
-        document.querySelectorAll('.product-card .carousel').forEach(carouselEl => {
-            new bootstrap.Carousel(carouselEl, {
-                interval: false,  // Desativa o auto-scroll
-                wrap: true        // Permite navegação circular
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    function prepareModalDetails(produtoId, nome, descricao, quantidade, preco, status, avaliacao, imagens) {
+        // Limpa o modal antes de carregar novos dados
+        document.getElementById('modalCarouselInner').innerHTML = '';
+        document.getElementById('modalCarouselIndicators').innerHTML = '';
+
+        // Dados básicos
+        document.getElementById('modalNome').textContent = nome;
+        document.getElementById('modalDescricao').textContent = descricao;
+        document.getElementById('modalPreco').textContent = 'R$ ' + preco;
+        document.getElementById('modalQuantidade').textContent = quantidade;
+
+        // Status
+        const statusElement = document.getElementById('modalStatus');
+        statusElement.textContent = status === 'true' ? 'Ativo' : 'Inativo';
+        statusElement.className = 'badge ' + (status === 'true' ? 'bg-success' : 'bg-danger');
+
+        // Avaliação em estrelas
+        const rating = parseFloat(avaliacao) || 0;
+        const ratingStarsContainer = document.getElementById('modalRatingStars');
+        ratingStarsContainer.innerHTML = '';
+        document.getElementById('modalAvaliacao').textContent = rating.toFixed(1);
+
+        for (let i = 1; i <= 5; i++) {
+            const star = document.createElement('i');
+            if (i <= Math.floor(rating)) {
+                star.className = 'fas fa-star text-warning';
+            } else if (i - 1 < rating) {
+                star.className = 'fas fa-star-half-alt text-warning';
+            } else {
+                star.className = 'far fa-star text-warning';
+            }
+            ratingStarsContainer.appendChild(star);
+        }
+
+        // Carrossel de imagens
+        const carouselInner = document.getElementById('modalCarouselInner');
+        const carouselIndicators = document.getElementById('modalCarouselIndicators');
+
+        if (imagens && imagens.length > 0) {
+            const imageIds = imagens.split(',');
+            imageIds.forEach((id, index) => {
+                if (!id.trim()) return;
+
+                // Adiciona indicador
+                const indicator = document.createElement('button');
+                indicator.type = 'button';
+                indicator.setAttribute('data-bs-target', '#modalCarousel');
+                indicator.setAttribute('data-bs-slide-to', index.toString());
+                indicator.className = index === 0 ? 'active' : '';
+                indicator.setAttribute('aria-current', index === 0 ? 'true' : 'false');
+                indicator.setAttribute('aria-label', 'Slide ' + (index + 1));
+                carouselIndicators.appendChild(indicator);
+
+                // Adiciona item do carrossel
+                const carouselItem = document.createElement('div');
+                carouselItem.className = index === 0 ? 'carousel-item active' : 'carousel-item';
+
+                const img = document.createElement('img');
+                img.src = '/produtos/imagem/' + id.trim();
+                img.className = 'd-block w-100 img-fluid rounded';
+                img.style.maxHeight = '400px';
+                img.style.objectFit = 'contain';
+                img.alt = 'Imagem do produto ' + nome;
+
+                img.onerror = function() {
+                    this.onerror = null;
+                    this.src = '/img/sem-imagem.jpg';
+                };
+
+                carouselItem.appendChild(img);
+                carouselInner.appendChild(carouselItem);
             });
 
-            // Adiciona fallback manual para navegação
+            // Inicializa o carrossel do modal com intervalo desativado
+            const modalCarousel = new bootstrap.Carousel(document.getElementById('modalCarousel'), {
+                interval: false,  // Isso desativa o avanço automático
+                wrap: true,
+                ride: false      // Garante que não haverá auto-rotação
+            });
+        } else {
+            // Caso não haja imagens
+            const noImageItem = document.createElement('div');
+            noImageItem.className = 'carousel-item active text-center py-5';
+            noImageItem.innerHTML = `
+                <i class="bi bi-image text-muted" style="font-size: 5rem;"></i>
+                <p class="text-muted mt-3">Este produto não possui imagens</p>
+            `;
+            carouselInner.appendChild(noImageItem);
+        }
+
+        // Mostra o modal
+        const modal = new bootstrap.Modal(document.getElementById('modalProduto'));
+        modal.show();
+    }
+    /*]]>*/
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. Configura os botões de visualização usando delegação de eventos
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.visualizar-produto')) {
+                const button = e.target.closest('.visualizar-produto');
+                const produtoId = button.getAttribute('data-id');
+                const nome = button.getAttribute('data-nome');
+                const descricao = button.getAttribute('data-descricao');
+                const quantidade = button.getAttribute('data-quantidade');
+                const preco = button.getAttribute('data-preco');
+                const status = button.getAttribute('data-status');
+                const avaliacao = button.getAttribute('data-avaliacao');
+                const imagens = button.getAttribute('data-imagens');
+
+                prepareModalDetails(produtoId, nome, descricao, quantidade, preco, status, avaliacao, imagens);
+            }
+        });
+
+        // 2. Inicialização dos carrosséis na página principal
+        document.querySelectorAll('.product-card .carousel').forEach(carouselEl => {
+            new bootstrap.Carousel(carouselEl, {
+                interval: false,
+                wrap: true
+            });
+
+            // Fallback manual para navegação
             const carouselId = carouselEl.id;
             const prevButton = document.querySelector(`[data-bs-target="#${carouselId}"].carousel-control-prev`);
             const nextButton = document.querySelector(`[data-bs-target="#${carouselId}"].carousel-control-next`);
@@ -276,113 +393,17 @@
             }
         });
 
-        // 2. Configuração do Modal (código existente)
-        const modal = new bootstrap.Modal(document.getElementById('modalProduto'));
-
-        document.querySelectorAll('.visualizar-produto').forEach(button => {
-            button.addEventListener('click', function() {
-                // Limpa o modal antes de carregar novos dados
-                document.getElementById('modalCarouselInner').innerHTML = '';
-                document.getElementById('modalCarouselIndicators').innerHTML = '';
-
-                // Dados básicos
-                document.getElementById('modalNome').textContent = this.getAttribute('data-nome');
-                document.getElementById('modalDescricao').textContent = this.getAttribute('data-descricao');
-                document.getElementById('modalPreco').textContent = 'R$ ' + this.getAttribute('data-preco');
-                document.getElementById('modalQuantidade').textContent = this.getAttribute('data-quantidade');
-
-                // Status
-                const status = this.getAttribute('data-status') === 'true';
-                const statusElement = document.getElementById('modalStatus');
-                statusElement.textContent = status ? 'Ativo' : 'Inativo';
-                statusElement.className = status ? 'badge bg-success' : 'badge bg-danger';
-
-                // Avaliação em estrelas
-                const avaliacao = parseFloat(this.getAttribute('data-avaliacao')) || 0;
-                const ratingStarsContainer = document.getElementById('modalRatingStars');
-                ratingStarsContainer.innerHTML = '';
-                document.getElementById('modalAvaliacao').textContent = avaliacao.toFixed(1);
-
-                for (let i = 1; i <= 5; i++) {
-                    const star = document.createElement('i');
-                    if (i <= Math.floor(avaliacao)) {
-                        star.className = 'fas fa-star text-warning';
-                    } else if (i - 1 < avaliacao) {
-                        star.className = 'fas fa-star-half-alt text-warning';
-                    } else {
-                        star.className = 'far fa-star text-warning';
-                    }
-                    ratingStarsContainer.appendChild(star);
-                }
-
-                // Carrossel de imagens
-                const imagensIds = this.getAttribute('data-imagens') ?
-                    this.getAttribute('data-imagens').split(',').filter(id => id.trim() !== '') : [];
-
-                const carouselInner = document.getElementById('modalCarouselInner');
-                const carouselIndicators = document.getElementById('modalCarouselIndicators');
-
-                if (imagensIds.length > 0) {
-                    imagensIds.forEach((id, index) => {
-                        // Adiciona indicador
-                        const indicator = document.createElement('button');
-                        indicator.type = 'button';
-                        indicator.setAttribute('data-bs-target', '#modalCarousel');
-                        indicator.setAttribute('data-bs-slide-to', index);
-                        indicator.className = index === 0 ? 'active' : '';
-                        indicator.setAttribute('aria-current', index === 0 ? 'true' : 'false');
-                        indicator.setAttribute('aria-label', 'Slide ' + (index + 1));
-                        carouselIndicators.appendChild(indicator);
-
-                        // Adiciona item do carrossel
-                        const carouselItem = document.createElement('div');
-                        carouselItem.className = index === 0 ? 'carousel-item active' : 'carousel-item';
-
-                        const img = document.createElement('img');
-                        img.src = '/produtos/imagem/' + id.trim();
-                        img.className = 'd-block w-100 img-fluid rounded';
-                        img.style.maxHeight = '400px';
-                        img.style.objectFit = 'contain';
-                        img.alt = 'Imagem do produto ' + document.getElementById('modalNome').textContent;
-
-                        img.onerror = function() {
-                            this.onerror = null;
-                            this.src = '/img/sem-imagem.jpg';
-                            console.error('Erro ao carregar imagem:', id);
-                        };
-
-                        carouselItem.appendChild(img);
-                        carouselInner.appendChild(carouselItem);
-                    });
-
-                    // Inicializa o carrossel do modal
-                    const modalCarousel = new bootstrap.Carousel(document.getElementById('modalCarousel'), {
-                        interval: false,
-                        wrap: true
-                    });
-                } else {
-                    // Caso não haja imagens
-                    const noImageItem = document.createElement('div');
-                    noImageItem.className = 'carousel-item active text-center py-5';
-                    noImageItem.innerHTML = `
-                        <i class="bi bi-image text-muted" style="font-size: 5rem;"></i>
-                        <p class="text-muted mt-3">Este produto não possui imagens</p>
-                    `;
-                    carouselInner.appendChild(noImageItem);
-                }
-
-                modal.show();
-            });
-        });
-
         // 3. Adiciona CSRF token aos formulários de inativar/reativar
-        document.querySelectorAll('form[method="post"]').forEach(form => {
-            const csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = '_csrf';
-            csrfInput.value = document.querySelector('meta[name="_csrf"]').content;
-            form.appendChild(csrfInput);
-        });
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+        if (csrfToken) {
+            document.querySelectorAll('form[method="post"]').forEach(form => {
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_csrf';
+                csrfInput.value = csrfToken;
+                form.appendChild(csrfInput);
+            });
+        }
     });
 </script>
 

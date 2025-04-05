@@ -181,7 +181,7 @@
                     <button th:unless="${imagem.imagemPrincipal}"
                             type="button"
                             class="set-main-btn"
-                            th:onclick="'setAsMain(' + ${imagem.id} + ')'">
+                            th:onclick="'setAsMain(' + ${imagem.id} + ', ' + ${produto.produtoId} + ')'">
                         Tornar principal
                     </button>
                 </div>
@@ -248,14 +248,30 @@
         });
     });
 
-    function setAsMain(imagemId) {
+    function setAsMain(imagemId, produtoId) {
+        // Obtém o token CSRF
+        const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+
         fetch('/produtos/imagem/' + imagemId + '/principal', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
+            headers: {
+                'Content-Type': 'application/json',
+                [csrfHeader]: csrfToken
+            },
+            body: JSON.stringify({
+                produtoId: produtoId
+            })
         }).then(response => {
             if (response.ok) {
                 location.reload(); // Recarrega a página para atualizar o status
+            } else {
+                alert('Erro ao definir imagem como principal');
+                console.error('Erro:', response.statusText);
             }
+        }).catch(error => {
+            console.error('Error:', error);
+            alert('Ocorreu um erro ao processar sua solicitação');
         });
     }
 </script>

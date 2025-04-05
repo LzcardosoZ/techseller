@@ -4,6 +4,7 @@ import br.com.techseller.techsellers.entity.ImagemProduto;
 import br.com.techseller.techsellers.entity.Produto;
 import br.com.techseller.techsellers.service.ProdutoService;
 import br.com.techseller.techsellers.service.ArmazenamentoImagemService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,12 +17,15 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.apache.commons.lang3.StringUtils;
+
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -50,8 +54,13 @@ public class ProdutoController {
         String nomeUsuario = auth.getName();
         model.addAttribute("nomeUsuario", nomeUsuario);
 
+        // Carrega as imagens junto com os produtos
         List<Produto> produtos = produtoService.listarProdutos(filtro);
         model.addAttribute("produtos", produtos);
+
+        // Adiciona utilitário para strings
+        model.addAttribute("stringUtils", new StringUtils());
+
         return "listarProdutos";
     }
 
@@ -104,6 +113,7 @@ public class ProdutoController {
             return "cadastroProduto";
         }
     }
+
 
     @GetMapping("/editar/{id}")
     public String exibirFormularioEdicao(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
@@ -195,8 +205,12 @@ public class ProdutoController {
     }
 
     @PostMapping("/imagem/{imagemId}/principal")
-    public ResponseEntity<Map<String, Object>> definirImagemPrincipal(@PathVariable Long imagemId) {
+    public ResponseEntity<Map<String, Object>> definirImagemPrincipal(
+            @PathVariable Long imagemId,
+            @RequestBody Map<String, Long> requestBody) {
+
         try {
+            Long produtoId = requestBody.get("produtoId");
             produtoService.definirImagemComoPrincipal(imagemId);
             return ResponseEntity.ok(Map.of(
                     "success", true,
