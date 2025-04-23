@@ -47,6 +47,16 @@
         </div>
 
         <div class="mb-3">
+            <label for="grupo" class="form-label"><b>Tipo de Usuário:</b></label>
+            <select th:field="*{grupo}" class="form-select" id="grupo" required>
+                <option value="" disabled selected>Selecione uma opção</option>
+                <option value="ADMIN">Administrador</option>
+                <option value="ESTOQUISTA">Estoquista</option>
+            </select>
+        </div>
+
+
+        <div class="mb-3">
             <label for="status" class="form-label" id="status"><b>Status: ativo</b></label>
         </div>
 

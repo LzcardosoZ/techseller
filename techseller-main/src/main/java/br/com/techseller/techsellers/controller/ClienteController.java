@@ -43,10 +43,18 @@ public class ClienteController {
     @PostMapping("/cadastrar")
     public String cadastrarCliente(@Valid @ModelAttribute Cliente cliente,
                                    BindingResult result,
+                                   @RequestParam String confirmarSenha,
                                    Model model) {
         model.addAttribute("generos", Arrays.asList("Masculino", "Feminino", "Outro"));
 
+        // Verificação de erro de validação de formulário
         if (result.hasErrors()) {
+            return "cadastroCliente";
+        }
+
+        // Verificação de senha e confirmação
+        if (!cliente.getSenha().equals(confirmarSenha)) {
+            model.addAttribute("erroSenha", "As senhas não coincidem.");
             return "cadastroCliente";
         }
 
@@ -64,6 +72,7 @@ public class ClienteController {
             return "cadastroCliente";
         }
     }
+
 
     // ===== EXIBIR PÁGINA DE CONTA =====
     @GetMapping("/conta")

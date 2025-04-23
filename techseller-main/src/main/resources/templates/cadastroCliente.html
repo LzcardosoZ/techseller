@@ -53,6 +53,12 @@
                     <label class="form-label">Senha*</label>
                     <input type="password" th:field="*{senha}" class="form-control" required minlength="6">
                 </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Repetir Senha*</label>
+                    <input type="password" name="confirmarSenha" class="form-control" required minlength="6">
+                    <div th:if="${erroSenha}" class="text-danger mt-1" th:text="${erroSenha}"></div>
+                </div>
+
             </div>
 
             <div class="row">

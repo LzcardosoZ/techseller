@@ -116,4 +116,9 @@ public class User implements UserDetails {
     }
 
 
+    @Transient
+    private String newPassword;
+
+    @Transient
+    private String confNewPassword;
 }

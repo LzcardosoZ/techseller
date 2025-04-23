@@ -25,9 +25,10 @@ public class SecurityConfig {
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/login", "/login_cliente", "/cadastro", "/registerUser", "/clientes/cadastro").permitAll()
                         .requestMatchers("/produtos/editar/**").hasAnyRole("ADMIN", "ESTOQUISTA")
-                        .requestMatchers(HttpMethod.GET, "/menu", "/listarUsuarios", "/usuarios/**").authenticated()
+                        .requestMatchers("/produtos/gerenciar-produtos").hasAnyRole("ADMIN", "ESTOQUISTA")
+                        .requestMatchers(HttpMethod.GET, "/menu", "/listarUsuarios", "/usuarios/**", "/home").authenticated()
                         .requestMatchers("/", "/loja/**", "/carrinho/**", "/css/**", "/js/**", "/img/**").permitAll()
-                        .anyRequest().permitAll()
+                        .anyRequest().authenticated()
                 )
                 .csrf(csrf -> csrf
                         .ignoringRequestMatchers("/h2-console/**") // <- ESSENCIAL
@@ -46,11 +47,12 @@ public class SecurityConfig {
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        .logoutSuccessUrl("/loja?logout")
+                        .logoutSuccessUrl("/login?logout")  // troca aqui!
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
                         .permitAll()
                 );
+
 
         return http.build();
     }

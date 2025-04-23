@@ -8,12 +8,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.ui.Model;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +28,8 @@ public class UserController {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public UserController(UserService userService) {
         this.userService = userService;
@@ -65,6 +69,7 @@ public class UserController {
 
         return "listarUsuarios";
     }
+
     @GetMapping("/login_cliente")
     public String exibirLoginCliente(Model model) {
         // Se desejar passar alguma informação para a view, adicione atributos ao model
@@ -76,11 +81,16 @@ public class UserController {
     // Página Home após login bem-sucedido
     @GetMapping("/home")
     public String home(Model model, @AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            return "redirect:/login?logout"; // ou apenas "/login"
+        }
+
         Optional<User> usuarioLogadoOpt = userService.findByEmail(userDetails.getUsername());
         usuarioLogadoOpt.ifPresent(user -> model.addAttribute("usuarioLogado", user));
 
         return usuarioLogadoOpt.isPresent() ? "home" : "redirect:/login?error";
     }
+
     // Página de cadastro
     @GetMapping("/cadastro")
     public String cadastro(Model model) {
@@ -101,27 +111,47 @@ public class UserController {
     }
 
     @PostMapping("/usuarios/{user_id}")
-    public String atualizarUsuario(@PathVariable Long user_id, @ModelAttribute User usuario) {
+    public String atualizarUsuario(
+            @PathVariable Long user_id,
+            @ModelAttribute User usuario,
+            RedirectAttributes redirectAttributes) {
+
         User usuarioExistente = userService.buscarPorId(user_id);
 
         if (usuarioExistente != null) {
-            if (usuario.getUsername() != null && !usuario.getUsername().isEmpty()) {
-                usuarioExistente.setUsername(usuario.getUsername()); // ✅ Agora salva corretamente
+            // ✅ Atualiza campos básicos do formulário
+            if (usuario.getNomeUsuario() != null && !usuario.getNomeUsuario().isBlank()) {
+                usuarioExistente.setNomeUsuario(usuario.getNomeUsuario());
             }
-            if (usuario.getCpf() != null && !usuario.getCpf().isEmpty()) {
+
+            if (usuario.getCpf() != null && !usuario.getCpf().isBlank()) {
                 usuarioExistente.setCpf(usuario.getCpf());
             }
+
             if (usuario.getGrupo() != null) {
                 usuarioExistente.setGrupo(usuario.getGrupo());
             }
 
-            usuarioExistente.setStatus(usuario.isStatus());
+            // 🔐 Atualiza senha se informada
+            if (usuario.getNewPassword() != null && !usuario.getNewPassword().isBlank()) {
+                if (!usuario.getNewPassword().equals(usuario.getConfNewPassword())) {
+                    redirectAttributes.addFlashAttribute("error", "As senhas não coincidem!");
+                    return "redirect:/usuarios/" + user_id;
+                }
 
+                String senhaCriptografada = passwordEncoder.encode(usuario.getNewPassword());
+                usuarioExistente.setPassword(senhaCriptografada);
+            }
+
+            // Salva alterações
             userService.atualizarUsuario(user_id, usuarioExistente);
         }
 
+        redirectAttributes.addFlashAttribute("success", "Usuário atualizado com sucesso!");
         return "redirect:/listarUsuarios";
     }
+
+
 
     @PostMapping("/usuarios/alterarStatus/{user_id}")
     public String alterarStatusUsuario(@PathVariable("user_id") Long userId) {

@@ -50,14 +50,32 @@
     </head>
     <body>
 
-        <!-- Navbar -->
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div id="logoutToast" class="toast text-bg-primary" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    Saindo da conta...
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Navbar -->
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
             <div class="container">
                 <a class="navbar-brand text-light fw-bold" href="/home">TechSeller</a>
-                <div class="ms-auto">
-                    <span class="text-light me-3" th:text="'Olá, ' + ${nomeUsuario}"></span>
-                    <a href="/logout" class="btn btn-danger btn-sm">Sair</a>
+                <div class="ms-auto d-flex align-items-center gap-2">
+                    <span class="text-light" th:text="'Olá, ' + ${nomeUsuario}"></span>
+                    <form th:action="@{/logout}" method="post" id="logoutForm" class="m-0">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                        <button type="submit" class="btn btn-outline-light btn-sm">
+                            <i class="bi bi-box-arrow-right"></i> Sair
+                        </button>
+                    </form>
                 </div>
+
             </div>
         </nav>
 
@@ -405,6 +423,22 @@
                     });
                 }
             });
+
+            function logoutWithToast() {
+                const toastEl = document.getElementById("logoutToast");
+                if (toastEl) {
+                    const toast = new bootstrap.Toast(toastEl, { delay: 1500 });
+                    toast.show();
+                    setTimeout(() => {
+                        document.getElementById("logoutForm").submit();
+                    }, 1500);
+                } else {
+                    document.getElementById("logoutForm").submit();
+                }
+            }
+
+
+
         </script>
 
     </body>

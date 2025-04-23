@@ -408,6 +408,7 @@
                                      th:alt="${produto.nome} + ' - Imagem ' + (${iter.index} + 1)"
                                      style="cursor: pointer;"
                                      th:onclick="'showProductModal(' + ${produto.produtoId} + ')'">
+
                             </div>
                         </div>
                         <button class="carousel-control-prev" type="button"
@@ -423,8 +424,8 @@
                     </div>
                 </div>
                 <div th:unless="${not #lists.isEmpty(produto.imagens)}" class="text-center">
-                    <img src="/img/sem-imagem.jpg"
-                         class="imagem-produto"
+                    <img th:src="@{'/imagens-produtos/' + ${produto.id} + '/' + ${imagem.nomeArquivo}}" />
+                    class="imagem-produto"
                          alt="Sem imagem"
                          style="cursor: pointer;"
                          th:onclick="'showProductModal(' + ${produto.produtoId} + ')'">

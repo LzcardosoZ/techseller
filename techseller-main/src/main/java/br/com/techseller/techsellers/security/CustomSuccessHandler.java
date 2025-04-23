@@ -30,7 +30,7 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
                 redirectURL = "/home"; // você pode criar essa rota
                 break;
             } else if (role.equals("ROLE_ESTOQUISTA")) {
-                redirectURL = "/listarUsuarios";
+                redirectURL = "/produtos/gerenciar-produtos";
                 break;
             } else if (role.equals("ROLE_CLIENTE")) {
                 redirectURL = "/loja";

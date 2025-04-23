@@ -35,10 +35,16 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand text-light fw-bold" href="/home">TechSeller</a>
-            <div class="ms-auto">
-                <span class="text-light me-3" th:text="'Olá, ' + ${nomeUsuario}"></span>
-                <a href="/logout" class="btn btn-danger btn-sm">Sair</a>
+            <div class="ms-auto d-flex align-items-center gap-2">
+                <span class="text-light" th:text="'Olá, ' + ${nomeUsuario}"></span>
+                <form th:action="@{/logout}" method="post" id="logoutForm" style="margin: 0;">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    <button type="submit" class="btn btn-danger btn-sm">
+                        <i class="bi bi-box-arrow-right"></i> Sair
+                    </button>
+                </form>
             </div>
+
         </div>
     </nav>
         <div class="container">

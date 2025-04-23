@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
@@ -51,7 +52,7 @@ public class ProdutoController {
     private ArmazenamentoImagemService armazenamentoImagemService;
 
 
-    @GetMapping
+    @GetMapping ("/gerenciar-produtos")
     public String listarProdutos(@RequestParam(required = false) String filtro, Model model) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String nomeUsuario = auth.getName();
@@ -97,7 +98,8 @@ public class ProdutoController {
             Produto produtoSalvo = produtoService.salvarProduto(produto, produto.getArquivosImagens());
 
             redirectAttributes.addFlashAttribute("success", "Produto cadastrado com sucesso!");
-            return "redirect:/produtos";
+            return "redirect:/produtos/gerenciar-produtos"; 
+
 
         } catch (IllegalArgumentException e) {
             log.error("Erro de validação: {}", e.getMessage());
@@ -215,8 +217,9 @@ public class ProdutoController {
 
             if (!resource.exists() || !resource.isReadable()) {
                 log.warn("Imagem não encontrada: {}", caminhoAbsoluto);
-                return fallbackImageResponse();
+                return ResponseEntity.notFound().build();
             }
+
 
             String contentType = imagem.getTipoMime() != null && !imagem.getTipoMime().isEmpty()
                     ? imagem.getTipoMime()
@@ -330,17 +333,11 @@ public class ProdutoController {
 
     private ResponseEntity<Resource> fallbackImageResponse() {
         try {
-            Path fallbackPath = Paths.get("src/main/resources/static/img/sem-imagem.jpg");
-            Resource resource = new UrlResource(fallbackPath.toUri());
+            Resource resource = new ClassPathResource("static/img/sem-imagem.jpg");
 
-            if (!resource.exists()) {
-                fallbackPath = Paths.get("classpath:static/img/sem-imagem.jpg");
-                resource = new UrlResource(fallbackPath.toUri());
-            }
-
-            if (resource.exists()) {
+            if (resource.exists() && resource.isReadable()) {
                 return ResponseEntity.ok()
-                        .contentType(MediaType.IMAGE_JPEG)
+                        .contentType(MediaType.IMAGE_JPEG) // ou adapte se a imagem for PNG
                         .body(resource);
             }
 
@@ -350,6 +347,7 @@ public class ProdutoController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
+
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleException(Exception e) {

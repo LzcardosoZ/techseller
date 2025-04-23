@@ -47,7 +47,8 @@
 
     <form method="POST" action="/produtos/salvar" enctype="multipart/form-data" th:object="${produto}"
           id="productForm" novalidate>
-        <input type="hidden" th:field="*{produtoId}">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
 
         <div class="row g-3">
             <div class="col-md-6">
