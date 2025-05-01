@@ -1,0 +1,17 @@
+// Este Arquivo Contem as Instruções de Teste de Software do Projeto 
+
+// Dependencia do Repositorio de Tetet pom.xml
+<dependency>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter-test</artifactId>
+  <scope>test</scope>
+</dependency>
+
+// Estrutura do Ambiente de Test 
+src/test/java/
+└── br/com/techseller/techsellers/
+    ├── service/
+    │   └── UserServiceTest.java
+    └── controller/
+        └── ProdutoControllerTest.java
+
