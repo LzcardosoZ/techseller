@@ -4,6 +4,7 @@ import br.com.techseller.techsellers.entity.Cliente;
 import br.com.techseller.techsellers.entity.Endereco;
 import br.com.techseller.techsellers.repository.ClienteRepository;
 import br.com.techseller.techsellers.service.ClienteService;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,8 +36,14 @@ public class ClienteServiceImpl implements ClienteService {
 
         validarEnderecos(cliente);
 
-        return clienteRepository.save(cliente);
+        try {
+            return clienteRepository.save(cliente);
+        } catch (Exception e) {
+            e.printStackTrace(); // imprime o erro no console
+            throw new RuntimeException("Erro ao salvar cliente: " + e.getMessage());
+        }
     }
+
 
     @Override
     public void atualizarCliente(Cliente clienteAtualizado) {
@@ -79,14 +86,32 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     private void validarEnderecos(Cliente cliente) {
+        // Valida e vincula o endereço de faturamento
         Endereco enderecoFaturamento = validarCep(cliente.getEnderecoFaturamento().getCep());
+        enderecoFaturamento.setLogradouro(cliente.getEnderecoFaturamento().getLogradouro());
+        enderecoFaturamento.setNumero(cliente.getEnderecoFaturamento().getNumero());
+        enderecoFaturamento.setComplemento(cliente.getEnderecoFaturamento().getComplemento());
+        enderecoFaturamento.setBairro(cliente.getEnderecoFaturamento().getBairro());
+        enderecoFaturamento.setCidade(cliente.getEnderecoFaturamento().getCidade());
+        enderecoFaturamento.setUf(cliente.getEnderecoFaturamento().getUf());
+        enderecoFaturamento.setCliente(cliente); // vínculo importante!
         cliente.setEnderecoFaturamento(enderecoFaturamento);
 
+        // Valida e vincula cada endereço de entrega
         for (int i = 0; i < cliente.getEnderecosEntrega().size(); i++) {
-            Endereco enderecoEntrega = validarCep(cliente.getEnderecosEntrega().get(i).getCep());
+            Endereco original = cliente.getEnderecosEntrega().get(i);
+            Endereco enderecoEntrega = validarCep(original.getCep());
+            enderecoEntrega.setLogradouro(original.getLogradouro());
+            enderecoEntrega.setNumero(original.getNumero());
+            enderecoEntrega.setComplemento(original.getComplemento());
+            enderecoEntrega.setBairro(original.getBairro());
+            enderecoEntrega.setCidade(original.getCidade());
+            enderecoEntrega.setUf(original.getUf());
+            enderecoEntrega.setCliente(cliente);
             cliente.getEnderecosEntrega().set(i, enderecoEntrega);
         }
     }
+
 
     private Endereco validarCep(String cep) {
         if (cep == null || cep.isBlank()) {

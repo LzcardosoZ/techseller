@@ -307,11 +307,21 @@
                 <ul class="dropdown-menu">
                     <li>
                         <a class="dropdown-item" th:href="@{/clientes/conta}">
-                            <i class="bi bi-person-lines-fill"></i> Acessar Minha Conta
+                            <i class="bi bi-person-lines-fill"></i> Minha Conta
                         </a>
                     </li>
                     <li>
-                        <!-- Logout via formulário POST com toast -->
+                        <a class="dropdown-item" th:href="@{/meus-pedidos}">
+                            <i class="bi bi-card-list"></i> Meus Pedidos
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" th:href="@{/loja}">
+                            <i class="bi bi-house"></i> Home
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
                         <form id="logoutForm" th:action="@{/logout}" method="post" style="display: inline;">
                             <button type="button" class="dropdown-item" style="border: none; background: none; padding: 0;" onclick="logoutWithToast()">
                                 <i class="bi bi-box-arrow-right"></i> Sair
@@ -319,6 +329,7 @@
                         </form>
                     </li>
                 </ul>
+
             </div>
             <div class="dropdown me-3" th:if="${usuarioLogado == null}">
                 <a class="btn btn-outline-light dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown">

@@ -50,10 +50,64 @@
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark navbar-techseller">
     <div class="container">
+        <!-- Logo -->
         <a class="navbar-brand" href="/">
             <span class="fs-4 fw-bold text-white">TechSeller</span>
         </a>
-        <div class="d-flex align-items-center">
+
+        <div class="d-flex align-items-center gap-3">
+            <!-- Dropdown do usuário logado -->
+            <div class="dropdown" th:if="${usuarioLogado != null}">
+                <a class="btn btn-outline-light dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown">
+                    Olá, <span th:text="${usuarioLogado.username.contains('@') ? usuarioLogado.username.substring(0, usuarioLogado.username.indexOf('@')) : usuarioLogado.username}"></span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item" th:href="@{/clientes/conta}">
+                            <i class="bi bi-person-lines-fill"></i> Minha Conta
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" th:href="@{/meus-pedidos}">
+                            <i class="bi bi-card-list"></i> Meus Pedidos
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" th:href="@{/loja}">
+                            <i class="bi bi-house"></i> Home
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <form id="logoutForm" th:action="@{/logout}" method="post" style="display: inline;">
+                            <button type="button" class="dropdown-item" style="border: none; background: none; padding: 0;" onclick="logoutWithToast()">
+                                <i class="bi bi-box-arrow-right"></i> Sair
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Usuário não logado -->
+            <div class="dropdown" th:if="${usuarioLogado == null}">
+                <a class="btn btn-outline-light dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown">
+                    Minha Conta
+                </a>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item" th:href="@{/login_cliente}">
+                            <i class="bi bi-box-arrow-in-right"></i> Login
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" th:href="@{/clientes/cadastro}">
+                            <i class="bi bi-person-plus"></i> Criar Conta
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Carrinho -->
             <a href="/carrinho" class="btn btn-light position-relative">
                 <i class="bi bi-cart3"></i>
                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
@@ -63,6 +117,7 @@
         </div>
     </div>
 </nav>
+
 
 <main class="container my-5">
     <div class="container my-5">
@@ -120,31 +175,12 @@
                         <h5 class="mb-3">Endereço de Entrega</h5>
                         <form th:action="@{/carrinho/frete}" method="post">
                             <div class="mb-3">
-                                <label for="cepDestino" class="form-label">Calcular Frete</label>
+                                <label for="cepDestino" class="form-label">CEP para entrega</label>
                                 <input type="text" name="cepDestino" id="cepDestino" class="form-control" placeholder="00000-000" required>
                             </div>
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="modalidade" value="Econômico" checked>
-                                    <label class="form-check-label">
-                                        Econômico - <span th:text="${#numbers.formatCurrency(freteEconomico)}"></span> (<span th:text="${modalidadeSelecionada == 'Econômico' ? prazoEntrega : '5 dias úteis'}"></span>)
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="modalidade" value="FastExpress">
-                                    <label class="form-check-label">
-                                        FastExpress - <span th:text="${#numbers.formatCurrency(freteFast)}"></span> (<span th:text="${modalidadeSelecionada == 'FastExpress' ? prazoEntrega : '3 dias úteis'}"></span>)
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="modalidade" value="FullExpress">
-                                    <label class="form-check-label">
-                                        FullExpress - <span th:text="${#numbers.formatCurrency(freteFull)}"></span> (<span th:text="${modalidadeSelecionada == 'FullExpress' ? prazoEntrega : '1 dia úteis'}"></span>)
-                                    </label>
-                                </div>
-                            </div>
-                            <button type="submit" class="btn btn-outline-primary">Calcular</button>
+                            <button type="submit" class="btn btn-outline-primary">Calcular Frete</button>
                         </form>
+
                     </div>
                 </div>
 
@@ -161,6 +197,10 @@
                         <button type="submit" class="btn btn-success w-100">
                                 <i class="bi bi-credit-card"></i> Finalizar Compra
                             </button>
+
+                            <a href="/loja" class="btn btn-outline-secondary w-100 mt-2">
+                                <i class="bi bi-arrow-left"></i> Voltar à Loja
+                            </a>
                         </form>
                     </div>
                 </div>

@@ -27,42 +27,41 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-        String tipo = request.getParameter("tipo");
+        System.out.println("Tentando autenticar o e-mail: " + email);
 
-        if ("cliente".equalsIgnoreCase(tipo)) {
-            // Tenta logar como cliente
-            Cliente cliente = clienteRepository.findByEmail(email)
-                    .orElseThrow(() -> new UsernameNotFoundException("Cliente não encontrado"));
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        Optional<Cliente> clienteOpt = clienteRepository.findByEmail(email);
 
-            // Segurança extra: bloqueia se email existe em user
-            if (userRepository.findByEmail(email).isPresent()) {
-                throw new UsernameNotFoundException("Acesso negado para cliente.");
-            }
+        if (userOpt.isPresent() && clienteOpt.isPresent()) {
+            throw new UsernameNotFoundException("Conflito de e-mail: existe tanto em 'users' quanto em 'clientes'.");
+        }
 
+        if (clienteOpt.isPresent()) {
+            Cliente cliente = clienteOpt.get();
+            System.out.println("Cliente encontrado: " + cliente.getEmail());
             return org.springframework.security.core.userdetails.User
                     .withUsername(cliente.getEmail())
                     .password(cliente.getSenha())
                     .authorities("ROLE_CLIENTE")
                     .build();
+        }
 
-        } else {
-            // Tenta logar como user (admin/estoquista)
-            User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
-
-            // Segurança extra: bloqueia se email existe em cliente
-            if (clienteRepository.findByEmail(email).isPresent()) {
-                throw new UsernameNotFoundException("Acesso negado para administrador.");
-            }
-
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            System.out.println("Admin/Estoquista encontrado: " + user.getEmail());
             return org.springframework.security.core.userdetails.User
                     .withUsername(user.getEmail())
                     .password(user.getPassword())
                     .authorities("ROLE_" + user.getGrupo().name())
                     .build();
         }
+
+        throw new UsernameNotFoundException("Usuário não encontrado: " + email);
     }
 
 
 }
+
+
+
+

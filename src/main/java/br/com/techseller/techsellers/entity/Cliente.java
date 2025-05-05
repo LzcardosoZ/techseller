@@ -41,8 +41,5 @@ public class Cliente {
     private List<Endereco> enderecosEntrega;
 
 
-
-    // Getters e Setters (ou use Lombok @Data)
-    // Construtores (pode usar @NoArgsConstructor e @AllArgsConstructor)
 }
 

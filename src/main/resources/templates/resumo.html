@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Resumo do Pedido - TechSeller</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        :root {
+            --cor-primaria: #2c3e50;
+            --cor-secundaria: #3498db;
+            --cor-texto: #2c3e50;
+        }
+        .navbar-techseller {
+            background: linear-gradient(135deg, var(--cor-primaria), var(--cor-secundaria));
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        footer {
+            background-color: var(--cor-primaria);
+            color: white;
+        }
+        footer a {
+            color: white;
+            text-decoration: none;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+        .resumo-box {
+            background-color: #f9f9f9;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark navbar-techseller">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            <span class="fs-4 fw-bold text-white">TechSeller</span>
+        </a>
+
+        <div class="d-flex align-items-center gap-3">
+            <!-- Dropdown do usuário logado -->
+            <div class="dropdown" th:if="${usuarioLogado != null}">
+                <a class="btn btn-outline-light dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown">
+                    Olá, <span th:text="${usuarioLogado.username.contains('@') ? usuarioLogado.username.substring(0, usuarioLogado.username.indexOf('@')) : usuarioLogado.username}"></span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item" th:href="@{/clientes/conta}">
+                            <i class="bi bi-person-lines-fill"></i> Minha Conta
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" th:href="@{/meus-pedidos}">
+                            <i class="bi bi-card-list"></i> Meus Pedidos
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" th:href="@{/loja}">
+                            <i class="bi bi-house"></i> Home
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <form id="logoutForm" th:action="@{/logout}" method="post" style="display: inline;">
+                            <button type="button" class="dropdown-item" style="border: none; background: none; padding: 0;" onclick="logoutWithToast()">
+                                <i class="bi bi-box-arrow-right"></i> Sair
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Usuário não logado -->
+            <div class="dropdown" th:if="${usuarioLogado == null}">
+                <a class="btn btn-outline-light dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown">
+                    Minha Conta
+                </a>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item" th:href="@{/login_cliente}">
+                            <i class="bi bi-box-arrow-in-right"></i> Login
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" th:href="@{/clientes/cadastro}">
+                            <i class="bi bi-person-plus"></i> Criar Conta
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Carrinho -->
+            <a href="/carrinho" class="btn btn-light position-relative">
+                <i class="bi bi-cart3"></i>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    <span th:text="${carrinho != null ? carrinho.totalItens : 0}"></span>
+                </span>
+            </a>
+        </div>
+    </div>
+</nav>
+
+
+<main class="container my-5">
+    <h2 class="mb-4">Resumo do Pedido</h2>
+
+    <table class="table table-bordered mb-4">
+        <thead>
+        <tr>
+            <th>Produto</th>
+            <th>Qtd</th>
+            <th>Valor Unitário</th>
+            <th>Subtotal</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="item : ${carrinho.itens}">
+            <td th:text="${item.produto.nome}">Produto</td>
+            <td th:text="${item.quantidade}">1</td>
+            <td th:text="'R$ ' + ${item.produto.preco}">R$ 0,00</td>
+            <td th:text="'R$ ' + ${item.subtotal}">R$ 0,00</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div class="resumo-box">
+        <p><strong>Total dos produtos:</strong> R$ <span th:text="${total}">0.00</span></p>
+        <p><strong>Frete:</strong> R$ <span th:text="${frete}">0.00</span></p>
+        <p class="fs-4"><strong>Total com frete:</strong> R$ <span th:text="${totalComFrete}">0.00</span></p>
+
+        <hr>
+        <p><strong>Endereço de Entrega:</strong> <span th:text="${enderecoEntregaStr}">Endereço completo</span></p>
+        <p><strong>Forma de Pagamento:</strong> <span th:text="${formaPagamentoStr}">Forma</span></p>
+
+        <form th:action="@{/carrinho/confirmar-pedido}" method="post">
+
+        <!-- Dados ocultos -->
+            <input type="hidden" name="enderecoId" th:value="${enderecoId}">
+            <input type="hidden" name="formaPagamento" th:value="${formaPagamento}">
+            <input type="hidden" name="nomeTitular" th:value="${nomeTitular}">
+            <input type="hidden" name="numeroCartao" th:value="${numeroCartao}">
+            <input type="hidden" name="codigoVerificador" th:value="${codigoVerificador}">
+            <input type="hidden" name="validade" th:value="${validade}">
+            <input type="hidden" name="parcelas" th:value="${parcelas}">
+
+            <div class="d-flex justify-content-between mt-4">
+                <a href="/carrinho/finalizar" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-check-circle"></i> Concluir Pedido
+                </button>
+            </div>
+        </form>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="py-4 text-center">
+    <div class="container">
+        <p class="mb-0">© 2025 TechSeller - Todos os direitos reservados</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

@@ -29,6 +29,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/menu", "/listarUsuarios", "/usuarios/**", "/home").authenticated()
                         .requestMatchers("/", "/loja/**", "/carrinho", "/carrinho/adicionar", "/carrinho/remover", "/carrinho/atualizar", "/carrinho/frete", "/css/**", "/js/**", "/img/**").permitAll()
                         .requestMatchers("/carrinho/finalizar").authenticated()
+                        .requestMatchers("/pedido/sucesso").permitAll()
                         .anyRequest().authenticated()
                 )
                 .csrf(csrf -> csrf
@@ -40,7 +41,7 @@ public class SecurityConfig {
                 .formLogin(form -> form
                         .loginPage("/login_cliente")
                         .loginProcessingUrl("/perform_login")
-                        .usernameParameter("email")
+                        .usernameParameter("username")
                         .passwordParameter("password")
                         .successHandler(customSuccessHandler)
                         .failureUrl("/login_cliente?error")
@@ -48,7 +49,7 @@ public class SecurityConfig {
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        .logoutSuccessUrl("/login?logout")  // troca aqui!
+                        .logoutSuccessUrl("/login_cliente?logout")
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
                         .permitAll()
