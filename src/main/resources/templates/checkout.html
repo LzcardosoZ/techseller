@@ -75,19 +75,26 @@
                     <form th:action="@{/clientes/conta/adicionarEndereco}" method="post">
                         <input type="hidden" name="from" value="checkout" />
                         <div class="row">
-                            <div class="col-md-6 mb-2">
+                            <div class="col-md-4 mb-2">
+                                <input name="cep" id="cep" class="form-control" placeholder="CEP" required>
                             </div>
-                            <div class="col-md-2 mb-2">
-                                <input name="numero" class="form-control" placeholder="Número" required>
+                            <div class="col-md-8 mb-2">
+                                <input name="logradouro" id="logradouro" class="form-control" placeholder="Logradouro" required>
                             </div>
                             <div class="col-md-4 mb-2">
+                                <input name="numero" class="form-control" placeholder="Número" required>
+                            </div>
+                            <div class="col-md-8 mb-2">
                                 <input name="complemento" class="form-control" placeholder="Complemento">
                             </div>
                             <div class="col-md-6 mb-2">
+                                <input name="bairro" id="bairro" class="form-control" placeholder="Bairro" required>
                             </div>
                             <div class="col-md-4 mb-2">
+                                <input name="cidade" id="cidade" class="form-control" placeholder="Cidade" required>
                             </div>
                             <div class="col-md-2 mb-2">
+                                <input name="uf" id="uf" class="form-control" placeholder="UF" required>
                             </div>
                         </div>
 

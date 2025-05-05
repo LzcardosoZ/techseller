@@ -25,22 +25,4 @@ public class TechsellersApplication {
 
 	}
 
-	@Bean
-	public CommandLineRunner testarSenhaManual(PasswordEncoder encoder, ClienteRepository clienteRepository) {
-		return args -> {
-			String senhaEmTexto = "123456";
-			String hashGerada = encoder.encode(senhaEmTexto);
-			System.out.println("➡️ Hash gerada agora: " + hashGerada);
-
-			Optional<Cliente> clienteOpt = clienteRepository.findByEmail("davi.spatricio@senacsp.edu.br");
-			if (clienteOpt.isPresent()) {
-				Cliente cliente = clienteOpt.get();
-				boolean ok = encoder.matches(senhaEmTexto, cliente.getSenha());
-				System.out.println("🔐 Teste manual de senha: " + ok);
-			} else {
-				System.out.println("⚠️ Cliente não encontrado.");
-			}
-		};
-	}
-
 }
