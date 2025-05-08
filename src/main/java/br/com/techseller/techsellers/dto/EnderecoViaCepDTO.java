@@ -1,5 +1,6 @@
 package br.com.techseller.techsellers.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
@@ -8,6 +9,9 @@ public class EnderecoViaCepDTO {
     private String logradouro;
     private String complemento;
     private String bairro;
-    private String localidade; // será mapeado manualmente para "cidade"
+
+    @JsonProperty("localidade")
+    private String cidade; // agora será populado corretamente
+
     private String uf;
 }

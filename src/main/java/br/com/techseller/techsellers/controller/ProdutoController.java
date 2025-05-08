@@ -150,6 +150,7 @@ public class ProdutoController {
 
         if (result.hasErrors()) {
             produto.setImagens(produtoService.listarImagensPorProduto(id));
+            produto.setImagemIds(produto.getImagemIds()); // Adicionado
             model.addAttribute("produto", produto);
             return "editarProduto";
         }
@@ -175,15 +176,14 @@ public class ProdutoController {
                 if ((totalImagensAtuais - imagensSeremRemovidas + novasImagensCount) < 1) {
                     redirectAttributes.addFlashAttribute("error", "O produto deve ter pelo menos uma imagem");
                     produto.setImagens(produtoService.listarImagensPorProduto(id));
+                    produto.setImagemIds(produto.getImagemIds()); // Adicionado
                     model.addAttribute("produto", produto);
                     return "editarProduto";
                 }
 
                 // Processar remoção de imagens
                 if (imagensRemovidas != null && !imagensRemovidas.isEmpty()) {
-                    imagensRemovidas.forEach(produtoService::removerImagem); // Usando o novo método
-                    // Ou:
-                    // imagensRemovidas.forEach(produtoService::removerImagem);
+                    imagensRemovidas.forEach(produtoService::removerImagem);
                 }
 
                 // Salvar com novas imagens
@@ -195,11 +195,14 @@ public class ProdutoController {
             log.error("Erro ao editar produto ID: {}", id, e);
             redirectAttributes.addFlashAttribute("error", "Erro: " + e.getMessage());
             produto.setImagens(produtoService.listarImagensPorProduto(id));
+            produto.setImagemIds(produto.getImagemIds()); // Adicionado
             model.addAttribute("produto", produto);
             return "editarProduto";
         }
+
         return "redirect:/produtos";
     }
+
 
     @GetMapping("/imagem/{imagemId}")
     public ResponseEntity<Resource> exibirImagem(@PathVariable Long imagemId) {
@@ -212,13 +215,14 @@ public class ProdutoController {
             }
 
             Path caminhoAbsoluto = Paths.get(diretorioBase).resolve(imagem.getCaminhoArquivo()).normalize();
+            log.info("🧭 Buscando imagem no caminho: {}", caminhoAbsoluto); // ← ADICIONADO
+
             Resource resource = new UrlResource(caminhoAbsoluto.toUri());
 
             if (!resource.exists() || !resource.isReadable()) {
-                log.warn("Imagem não encontrada: {}", caminhoAbsoluto);
+                log.warn("Imagem não encontrada ou não legível: {}", caminhoAbsoluto);
                 return ResponseEntity.notFound().build();
             }
-
 
             String contentType = imagem.getTipoMime() != null && !imagem.getTipoMime().isEmpty()
                     ? imagem.getTipoMime()
@@ -233,6 +237,7 @@ public class ProdutoController {
             return fallbackImageResponse();
         }
     }
+
     @GetMapping("/detalhes/{id}")
     @ResponseBody
     public ResponseEntity<?> detalhesProduto(@PathVariable Long id) {

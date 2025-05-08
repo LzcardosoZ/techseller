@@ -23,15 +23,23 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers("/login", "/login_cliente", "/cadastro", "/registerUser", "/clientes/cadastro").permitAll()
+                        .requestMatchers(
+                                "/login",                 // login de admin/estoquista
+                                "/login_cliente",         // login de cliente
+                                "/clientes/cadastro",     // formulário de cadastro (GET)
+                                "/clientes/cadastrar"     // envio do formulário (POST)
+                        ).permitAll()
                         .requestMatchers("/produtos/editar/**").hasAnyRole("ADMIN", "ESTOQUISTA")
                         .requestMatchers("/produtos/gerenciar-produtos").hasAnyRole("ADMIN", "ESTOQUISTA")
                         .requestMatchers(HttpMethod.GET, "/menu", "/listarUsuarios", "/usuarios/**", "/home").authenticated()
-                        .requestMatchers("/", "/loja/**", "/carrinho", "/carrinho/adicionar", "/carrinho/remover", "/carrinho/atualizar", "/carrinho/frete", "/css/**", "/js/**", "/img/**").permitAll()
+                        .requestMatchers("/", "/loja/**", "/carrinho", "/carrinho/adicionar", "/carrinho/remover",
+                                "/carrinho/atualizar", "/carrinho/frete", "/css/**", "/js/**", "/img/**").permitAll()
                         .requestMatchers("/carrinho/finalizar").authenticated()
                         .requestMatchers("/pedido/sucesso").permitAll()
                         .anyRequest().authenticated()
                 )
+
+
                 .csrf(csrf -> csrf
                         .ignoringRequestMatchers("/h2-console/**") // <- ESSENCIAL
                 )

@@ -147,7 +147,10 @@ public class CarrinhoController {
         // Buscar cliente logado
         Cliente cliente = clienteService.buscarPorEmail(principal.getName())
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+
+        // Adiciona à model a lista de endereços e o padrão
         model.addAttribute("enderecos", cliente.getEnderecosEntrega());
+        model.addAttribute("enderecoPadrao", cliente.getEnderecoPadrao()); // <-- Adicionado aqui
 
         // Dados do carrinho
         model.addAttribute("carrinho", carrinho);
@@ -157,6 +160,7 @@ public class CarrinhoController {
 
         return "checkout";
     }
+
 
     @PostMapping("/confirmar-pedido")
     public String confirmarPedido(@RequestParam("enderecoId") Long enderecoId,

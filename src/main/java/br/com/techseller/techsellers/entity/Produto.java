@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "PRODUTO")
@@ -71,6 +72,10 @@ public class Produto {
     @Transient
     @JsonIgnore
     private MultipartFile[] arquivosImagens;
+
+    @Transient
+    @JsonIgnore
+    private String imagemIds;
 
     // ============== MÉTODOS AUXILIARES ==============
 
@@ -142,5 +147,17 @@ public class Produto {
     public boolean temArquivosImagens() {
         return arquivosImagens != null && arquivosImagens.length > 0 &&
                 !Arrays.stream(arquivosImagens).allMatch(MultipartFile::isEmpty);
+    }
+
+    @Transient
+    public String getImagemIds() {
+        if (imagens == null || imagens.isEmpty()) return "";
+        return imagens.stream()
+                .map(imagem -> String.valueOf(imagem.getId()))
+                .collect(Collectors.joining(","));
+    }
+
+    public void setImagemIds(String imagemIds) {
+        this.imagemIds = imagemIds;
     }
 }

@@ -109,8 +109,8 @@
                     <div class="card product-card h-100">
                         <!-- Carrossel de Imagens -->
                         <div th:if="${produto.imagens != null and !produto.imagens.isEmpty()}"
-                             id="carousel-${produto.produtoId}" class="carousel slide" data-bs-ride="false">
-                            <div class="carousel-indicators">
+                             id="carousel-${produto.produtoId}" class="carousel slide" data-bs-ride="carousel" data-bs-interval="6000">
+                        <div class="carousel-indicators">
                                 <button th:each="img, iter : ${produto.imagens}"
                                         type="button"
                                         data-bs-target="#carousel-${produto.produtoId}"
@@ -168,15 +168,16 @@
                                 <!-- Botão de Detalhes -->
                                 <button class="btn btn-sm btn-outline-secondary visualizar-produto"
                                         th:attr="data-id=${produto.produtoId},
-                        data-nome=${produto.nome},
-                        data-descricao=${produto.descricaoDetalhada},
-                        data-quantidade=${produto.quantidadeEstoque},
-                        data-preco=${#numbers.formatDecimal(produto.preco, 1, 2, 'POINT')},
-                        data-status=${produto.ativo},
-                        data-avaliacao=${produto.avaliacao != null ? produto.avaliacao : 0},
-                        data-imagens=${#strings.listJoin(produto.imagens.![id], ',')}">
+                 data-nome=${produto.nome},
+                 data-descricao=${produto.descricaoDetalhada},
+                 data-quantidade=${produto.quantidadeEstoque},
+                 data-preco=${#numbers.formatDecimal(produto.preco, 1, 2, 'POINT')},
+                 data-status=${produto.ativo},
+                 data-avaliacao=${produto.avaliacao != null ? produto.avaliacao : 0},
+                 data-imagens=${produto.imagemIds}">
                                     <i class="bi bi-eye"></i> Detalhes
                                 </button>
+
 
                                 <form th:if="${produto.ativo}" th:action="@{/produtos/inativar/{id}(id=${produto.produtoId})}"
                                       method="post" class="d-inline">
@@ -385,9 +386,10 @@
                 // 2. Inicialização dos carrosséis na página principal
                 document.querySelectorAll('.product-card .carousel').forEach(carouselEl => {
                     new bootstrap.Carousel(carouselEl, {
-                        interval: false,
+                        interval: carouselEl.dataset.bsInterval ? parseInt(carouselEl.dataset.bsInterval) : 6000,
                         wrap: true
                     });
+
 
                     // Fallback manual para navegação
                     const carouselId = carouselEl.id;

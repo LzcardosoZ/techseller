@@ -4,26 +4,13 @@
     <meta charset="UTF-8">
     <title>Cadastro de Cliente</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <style>
-        .endereco-entrega {
-            margin-bottom: 20px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-        }
-        .remove-endereco {
-            margin-top: 32px;
-        }
-    </style>
 </head>
 <body>
 <div class="container mt-4">
     <h2>Cadastro de Cliente</h2>
 
-    <!-- Mensagem de erro geral -->
-    <div th:if="${erroCEP}" class="alert alert-danger">
-        <span th:text="${erroCEP}"></span>
+    <div th:if="${erroCadastro}" class="alert alert-danger">
+        <span th:text="${erroCadastro}"></span>
     </div>
 
     <form th:action="@{/clientes/cadastrar}" th:object="${cliente}" method="post" id="formCliente">
@@ -40,10 +27,9 @@
                 <div class="col-md-6 mb-3">
                     <label class="form-label">CPF*</label>
                     <input type="text" th:field="*{cpf}" class="form-control" required maxlength="14"
-                           pattern="\d{3}\.\d{3}\.\d{3}-\d{2}" title="Formato: 000.000.000-00">
+                           title="Formato: 000.000.000-00">
                 </div>
             </div>
-
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label">E-mail*</label>
@@ -59,9 +45,7 @@
                     <input type="password" name="confirmarSenha" class="form-control" required minlength="6">
                     <div th:if="${erroSenha}" class="text-danger mt-1" th:text="${erroSenha}"></div>
                 </div>
-
             </div>
-
             <div class="row">
                 <div class="col-md-4 mb-3">
                     <label class="form-label">Data de Nascimento*</label>
@@ -71,9 +55,7 @@
                     <label class="form-label">Gênero*</label>
                     <select th:field="*{genero}" class="form-control" required>
                         <option value="">Selecione</option>
-                        <option th:each="gen : ${generos}"
-                                th:value="${gen}"
-                                th:text="${gen}"></option>
+                        <option th:each="gen : ${generos}" th:value="${gen}" th:text="${gen}"></option>
                     </select>
                 </div>
             </div>
@@ -81,189 +63,144 @@
 
         <!-- Endereço de Faturamento -->
         <div class="mb-4">
-            <h4>Endereço de Faturamento*</h4>
+            <h4 class="text-center">Endereço de Faturamento*</h4>
             <div class="row g-3">
                 <div class="col-md-2">
                     <label class="form-label">CEP*</label>
-                    <input type="text" th:field="*{enderecoFaturamento.cep}"
-                           class="form-control cep" required
-                           pattern="\d{5}-?\d{3}" title="Formato: 00000-000">
+                    <input type="text" name="cepFaturamento" class="form-control" id="cepFaturamento">
                     <button type="button" class="btn btn-sm btn-outline-secondary mt-1 w-100"
-                            onclick="buscarEndereco(this)">Buscar CEP</button>
+                            onclick="buscarEnderecoFaturamento()">Buscar CEP</button>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Logradouro*</label>
-                    <input type="text" th:field="*{enderecoFaturamento.logradouro}"
-                           class="form-control" required>
+                    <input type="text" name="logradouroFaturamento" class="form-control" id="logradouroFaturamento">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Número*</label>
-                    <input type="text" th:field="*{enderecoFaturamento.numero}"
-                           class="form-control" required>
+                    <input type="text" name="numeroFaturamento" class="form-control" id="numeroFaturamento">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Complemento</label>
-                    <input type="text" th:field="*{enderecoFaturamento.complemento}"
-                           class="form-control">
+                    <input type="text" name="complementoFaturamento" class="form-control" id="complementoFaturamento">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Bairro*</label>
-                    <input type="text" th:field="*{enderecoFaturamento.bairro}"
-                           class="form-control" required>
+                    <input type="text" name="bairroFaturamento" class="form-control" id="bairroFaturamento">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Cidade*</label>
-                    <input type="text" th:field="*{enderecoFaturamento.cidade}"
-                           class="form-control" required>
+                    <input type="text" name="cidadeFaturamento" class="form-control" id="cidadeFaturamento">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">UF*</label>
-                    <input type="text" th:field="*{enderecoFaturamento.uf}"
-                           class="form-control" required maxlength="2">
+                    <input type="text" name="ufFaturamento" class="form-control" id="ufFaturamento" maxlength="2">
                 </div>
             </div>
         </div>
+
 
         <!-- Endereços de Entrega -->
-        <div class="mb-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4>Endereços de Entrega</h4>
-                <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="copiarEndereco">
-                    <label class="form-check-label" for="copiarEndereco">Usar mesmo endereço de faturamento</label>
-                </div>
-            </div>
-
-            <div id="enderecosEntrega">
-                <div th:each="endereco, iterStat : *{enderecosEntrega}" class="endereco-entrega">
-                    <div class="row g-3">
-                        <div class="col-md-2">
-                            <label class="form-label">CEP*</label>
-                            <input type="text" th:field="*{enderecosEntrega[__${iterStat.index}__].cep}"
-                                   class="form-control cep" required
-                                   pattern="\d{5}-?\d{3}" title="Formato: 00000-000">
-                        </div>
-                        <div class="col-md-5">
-                            <label class="form-label">Logradouro*</label>
-                            <input type="text" th:field="*{enderecosEntrega[__${iterStat.index}__].logradouro}"
-                                   class="form-control" required>
-                        </div>
-                        <div class="col-md-1">
-                            <label class="form-label">Nº*</label>
-                            <input type="text" th:field="*{enderecosEntrega[__${iterStat.index}__].numero}"
-                                   class="form-control" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Complemento</label>
-                            <input type="text" th:field="*{enderecosEntrega[__${iterStat.index}__].complemento}"
-                                   class="form-control">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Bairro*</label>
-                            <input type="text" th:field="*{enderecosEntrega[__${iterStat.index}__].bairro}"
-                                   class="form-control" required>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Cidade*</label>
-                            <input type="text" th:field="*{enderecosEntrega[__${iterStat.index}__].cidade}"
-                                   class="form-control" required>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">UF*</label>
-                            <input type="text" th:field="*{enderecosEntrega[__${iterStat.index}__].uf}"
-                                   class="form-control" required maxlength="2">
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="button" class="btn btn-danger btn-sm w-100 remove-endereco"
-                                    th:if="${iterStat.index} > 0">Remover</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <button type="button" class="btn btn-outline-secondary mt-2" id="adicionarEndereco">
-                + Adicionar outro endereço
-            </button>
+        <div class="text-center mb-3">
+            <h4>Endereços de Entrega</h4>
         </div>
 
-        <div class="d-grid gap-2">
+        <div class="d-flex justify-content-end mb-3">
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="copiarEndereco">
+                <label class="form-check-label" for="copiarEndereco">Usar mesmo endereço de faturamento</label>
+            </div>
+        </div>
+
+
+    <div id="enderecosEntrega">
+        <div class="endereco-entrega">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Logradouro*</label>
+                    <input type="text" name="logradouroEntrega" class="form-control">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Número*</label>
+                    <input type="text" name="numeroEntrega" class="form-control">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Complemento</label>
+                    <input type="text" name="complementoEntrega" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Bairro*</label>
+                    <input type="text" name="bairroEntrega" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Cidade*</label>
+                    <input type="text" name="cidadeEntrega" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">UF*</label>
+                    <input type="text" name="ufEntrega" class="form-control" maxlength="2">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <button type="button" class="btn btn-outline-secondary mt-3" id="adicionarEndereco">
+        + Adicionar outro endereço
+    </button>
+
+
+
+<div class="d-grid gap-2">
             <button type="submit" class="btn btn-primary btn-lg">Cadastrar</button>
         </div>
     </form>
 </div>
 
-<script>
-    // Formatar CEP
-    $(document).on('input', '.cep', function() {
-        let value = $(this).val().replace(/\D/g, '');
-        if (value.length > 5) {
-            value = value.substring(0,5) + '-' + value.substring(5,8);
-        }
-        $(this).val(value.substring(0, 9));
-    });
 
-    // Buscar endereço pelo CEP
-    function buscarEndereco(button) {
-        const input = $(button).siblings('input');
-        const cep = input.val().replace(/\D/g, '');
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+    function buscarEnderecoFaturamento() {
+        const cep = document.getElementById("cepFaturamento").value.replace(/\D/g, '');
 
         if (cep.length === 8) {
-            const row = $(button).closest('.row');
-
-            $.get(`https://viacep.com.br/ws/${cep}/json/`)
-                .done(function(data) {
+            fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                .then(response => response.json())
+                .then(data => {
                     if (!data.erro) {
-                        row.find('input[name$="logradouro"]').val(data.logradouro);
-                        row.find('input[name$="bairro"]').val(data.bairro);
-                        row.find('input[name$="cidade"]').val(data.localidade);
-                        row.find('input[name$="uf"]').val(data.uf);
+                        document.getElementById("logradouroFaturamento").value = data.logradouro;
+                        document.getElementById("bairroFaturamento").value = data.bairro;
+                        document.getElementById("cidadeFaturamento").value = data.localidade;
+                        document.getElementById("ufFaturamento").value = data.uf;
                     } else {
-                        alert('CEP não encontrado');
+                        alert('CEP não encontrado.');
                     }
                 })
-                .fail(function() {
-                    alert('Erro ao consultar CEP. Tente novamente.');
-                });
+                .catch(() => alert('Erro ao buscar o CEP.'));
+        } else {
+            alert('Informe um CEP válido com 8 dígitos.');
         }
     }
 
-    // Copiar endereço de faturamento para entrega
-    $('#copiarEndereco').change(function() {
+    $('#copiarEndereco').change(function () {
         if (this.checked) {
-            const faturamento = {
-                cep: $('input[name="enderecoFaturamento.cep"]').val(),
-                logradouro: $('input[name="enderecoFaturamento.logradouro"]').val(),
-                numero: $('input[name="enderecoFaturamento.numero"]').val(),
-                complemento: $('input[name="enderecoFaturamento.complemento"]').val(),
-                bairro: $('input[name="enderecoFaturamento.bairro"]').val(),
-                cidade: $('input[name="enderecoFaturamento.cidade"]').val(),
-                uf: $('input[name="enderecoFaturamento.uf"]').val()
-            };
+            const cep = $('#cepFaturamento').val();
+            const logradouro = $('#logradouroFaturamento').val();
+            const numero = $('#numeroFaturamento').val();
+            const complemento = $('#complementoFaturamento').val();
+            const bairro = $('#bairroFaturamento').val();
+            const cidade = $('#cidadeFaturamento').val();
+            const uf = $('#ufFaturamento').val();
 
-            $('#enderecosEntrega .endereco-entrega').each(function() {
-                $(this).find('input[name$="cep"]').val(faturamento.cep);
-                $(this).find('input[name$="logradouro"]').val(faturamento.logradouro);
-                $(this).find('input[name$="numero"]').val(faturamento.numero);
-                $(this).find('input[name$="complemento"]').val(faturamento.complemento);
-                $(this).find('input[name$="bairro"]').val(faturamento.bairro);
-                $(this).find('input[name$="cidade"]').val(faturamento.cidade);
-                $(this).find('input[name$="uf"]').val(faturamento.uf);
+            $('#enderecosEntrega .endereco-entrega').each(function () {
+                $(this).find('input[name="cepEntrega"]').val(cep);
+                $(this).find('input[name="logradouroEntrega"]').val(logradouro);
+                $(this).find('input[name="numeroEntrega"]').val(numero);
+                $(this).find('input[name="complementoEntrega"]').val(complemento);
+                $(this).find('input[name="bairroEntrega"]').val(bairro);
+                $(this).find('input[name="cidadeEntrega"]').val(cidade);
+                $(this).find('input[name="ufEntrega"]').val(uf);
             });
-        }
-    });
-
-    // Adicionar novo endereço de entrega
-    $('#adicionarEndereco').click(function() {
-        const novoEndereco = $('#enderecosEntrega .endereco-entrega').first().clone();
-        novoEndereco.find('input').val('');
-        $('#enderecosEntrega').append(novoEndereco);
-        novoEndereco.find('.remove-endereco').show();
-    });
-
-    // Remover endereço de entrega
-    $(document).on('click', '.remove-endereco', function() {
-        if ($('#enderecosEntrega .endereco-entrega').length > 1) {
-            $(this).closest('.endereco-entrega').remove();
         }
     });
 </script>

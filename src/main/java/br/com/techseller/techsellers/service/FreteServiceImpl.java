@@ -28,15 +28,18 @@ public class FreteServiceImpl implements FreteService {
 
     public Endereco obterEnderecoPorCep(String cep) {
         EnderecoViaCepDTO dto = buscarEnderecoViaCep(cep);
+
         Endereco endereco = new Endereco();
         endereco.setCep(dto.getCep());
         endereco.setLogradouro(dto.getLogradouro());
         endereco.setComplemento(dto.getComplemento());
         endereco.setBairro(dto.getBairro());
-        endereco.setCidade(dto.getLocalidade());
+        endereco.setCidade(dto.getCidade());
         endereco.setUf(dto.getUf());
+
         return endereco;
     }
+
 
     public BigDecimal calcularFretePorCep(String cep) {
         Endereco endereco = obterEnderecoPorCep(cep);

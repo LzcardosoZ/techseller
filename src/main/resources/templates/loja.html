@@ -301,7 +301,7 @@
         <!-- Controles do Usuário -->
         <div class="d-flex align-items-center">
             <div class="dropdown me-3" th:if="${usuarioLogado != null}">
-                <a class="btn btn-outline-light dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown">
+                <a class="btn btn-outline-light dropdown-toggle" href="#" role="button" id="dropdownMenuLinkLogado" data-bs-toggle="dropdown">
                     Olá, <span th:text="${usuarioLogado.username.contains('@') ? usuarioLogado.username.substring(0, usuarioLogado.username.indexOf('@')) : usuarioLogado.username}"></span>
                 </a>
                 <ul class="dropdown-menu">
@@ -332,7 +332,7 @@
 
             </div>
             <div class="dropdown me-3" th:if="${usuarioLogado == null}">
-                <a class="btn btn-outline-light dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown">
+                <a class="btn btn-outline-light dropdown-toggle" href="#" role="button" id="dropdownMenuLinkNaoLogado" data-bs-toggle="dropdown">
                     Minha Conta
                 </a>
                 <ul class="dropdown-menu">
@@ -402,8 +402,12 @@
             <div class="card h-100 card-produto">
                 <!-- Carrossel de Imagens do Produto -->
                 <div th:if="${not #lists.isEmpty(produto.imagens)}" class="product-carousel">
-                    <div th:id="'carousel_' + ${produto.produtoId}" class="carousel slide" data-bs-ride="carousel">
-                        <div class="carousel-indicators">
+                    <div th:id="'carousel_' + ${produto.produtoId}"
+                         class="carousel slide"
+                         data-bs-ride="carousel"
+                         data-bs-interval="6000">
+
+                    <div class="carousel-indicators">
                             <button th:each="img, iter : ${produto.imagens}"
                                     type="button"
                                     th:attr="data-bs-target='#carousel_' + ${produto.produtoId}, data-bs-slide-to=${iter.index}"
@@ -496,7 +500,7 @@
 
             <!-- Coluna 2 - Links Úteis -->
             <td width="33%" style="vertical-align: top; border-right: 1px solid #444; padding: 0 20px; text-align: center;">
-                <div style="font-weight: bold; margin-bottom: 8px; font-size: 18px;">Linke Utels</div>
+                <div style="font-weight: bold; margin-bottom: 8px; font-size: 18px;">Links Úteis</div>
                 <div style="color: #ccc; font-size: 14px; line-height: 1.8;">
                     <a href="contato.html" style="color: #ccc; text-decoration: none; display: block;">Contato</a>
                     <a href="politica-privacidade.html" style="color: #ccc; text-decoration: none; display: block;">Política de Privacidade</a>
@@ -755,8 +759,9 @@
 
         // Inicializa carrosseis dos produtos
         document.querySelectorAll('.product-carousel .carousel').forEach(carouselEl => {
-            new bootstrap.Carousel(carouselEl, { interval: false });
+            new bootstrap.Carousel(carouselEl, { interval: 6000 });
         });
+
     });
 
     // Atualiza o contador do carrinho

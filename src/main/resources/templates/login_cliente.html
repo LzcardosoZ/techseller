@@ -22,6 +22,12 @@
             E-mail ou senha incorretos, ou tentativa de login inválida.
         </div>
 
+        <!-- Exibe mensagem de sucesso pós-cadastro -->
+        <div th:if="${param.cadastro}" class="alert alert-success">
+            ✅ Cadastro realizado com sucesso. Faça login para continuar.
+        </div>
+
+
         <form th:action="@{/perform_login}" method="post">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 

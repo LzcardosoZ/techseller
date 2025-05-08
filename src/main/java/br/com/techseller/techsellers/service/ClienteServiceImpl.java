@@ -1,19 +1,28 @@
 package br.com.techseller.techsellers.service;
 
+import br.com.techseller.techsellers.dto.EnderecoViaCepDTO;
 import br.com.techseller.techsellers.entity.Cliente;
 import br.com.techseller.techsellers.entity.Endereco;
 import br.com.techseller.techsellers.repository.ClienteRepository;
 import br.com.techseller.techsellers.service.ClienteService;
 import jakarta.annotation.PostConstruct;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class ClienteServiceImpl implements ClienteService {
 
@@ -23,6 +32,10 @@ public class ClienteServiceImpl implements ClienteService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    @Transactional
     @Override
     public Cliente cadastrarCliente(Cliente cliente) {
         if (emailExiste(cliente.getEmail())) {
@@ -34,15 +47,28 @@ public class ClienteServiceImpl implements ClienteService {
 
         cliente.setSenha(passwordEncoder.encode(cliente.getSenha()));
 
-        validarEnderecos(cliente);
+        log.info("📥 Cliente antes da validação de endereços: {}", cliente);
+
+        validarEnderecos(cliente); // ← Aqui os endereços são preenchidos com dados da API
+
+        // Exibe os dados completos dos endereços logo antes de salvar
+        log.info("📦 Endereços prontos para salvar:");
+        for (Endereco endereco : cliente.getEnderecos()) {
+            log.info("👉 {}", endereco);
+        }
 
         try {
-            return clienteRepository.save(cliente);
+            // ✅ Persistência direta via EntityManager
+            entityManager.persist(cliente);
+            entityManager.flush(); // força gravação imediata no banco
+            return cliente;
         } catch (Exception e) {
-            e.printStackTrace(); // imprime o erro no console
+            log.error("❌ Erro ao salvar cliente no banco: {}", e.getMessage(), e);
             throw new RuntimeException("Erro ao salvar cliente: " + e.getMessage());
         }
     }
+
+
 
 
     @Override
@@ -58,12 +84,20 @@ public class ClienteServiceImpl implements ClienteService {
             cliente.setSenha(passwordEncoder.encode(clienteAtualizado.getSenha()));
         }
 
-        if (clienteAtualizado.getEnderecosEntrega() != null) {
-            cliente.setEnderecosEntrega(clienteAtualizado.getEnderecosEntrega());
+        // Se estiver vindo com endereços atualizados (ex: em edição total), substitui
+        if (clienteAtualizado.getEnderecos() != null && !clienteAtualizado.getEnderecos().isEmpty()) {
+            for (Endereco endereco : clienteAtualizado.getEnderecos()) {
+                endereco.setCliente(cliente);
+            }
+            cliente.setEnderecos(clienteAtualizado.getEnderecos());
         }
+
+        // Caso contrário, assume que os endereços já estão atualizados diretamente no objeto
 
         clienteRepository.save(cliente);
     }
+
+
 
     @Override
     public boolean emailExiste(String email) {
@@ -86,68 +120,112 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     private void validarEnderecos(Cliente cliente) {
-        // Valida e vincula o endereço de faturamento
-        Endereco enderecoFaturamento = validarCep(cliente.getEnderecoFaturamento().getCep());
-        enderecoFaturamento.setLogradouro(cliente.getEnderecoFaturamento().getLogradouro());
-        enderecoFaturamento.setNumero(cliente.getEnderecoFaturamento().getNumero());
-        enderecoFaturamento.setComplemento(cliente.getEnderecoFaturamento().getComplemento());
-        enderecoFaturamento.setBairro(cliente.getEnderecoFaturamento().getBairro());
-        enderecoFaturamento.setCidade(cliente.getEnderecoFaturamento().getCidade());
-        enderecoFaturamento.setUf(cliente.getEnderecoFaturamento().getUf());
-        enderecoFaturamento.setCliente(cliente); // vínculo importante!
-        cliente.setEnderecoFaturamento(enderecoFaturamento);
+        log.info("🛠️ Iniciando validação de endereços para cliente: {}", cliente.getEmail());
 
-        // Valida e vincula cada endereço de entrega
-        for (int i = 0; i < cliente.getEnderecosEntrega().size(); i++) {
-            Endereco original = cliente.getEnderecosEntrega().get(i);
-            Endereco enderecoEntrega = validarCep(original.getCep());
-            enderecoEntrega.setLogradouro(original.getLogradouro());
-            enderecoEntrega.setNumero(original.getNumero());
-            enderecoEntrega.setComplemento(original.getComplemento());
-            enderecoEntrega.setBairro(original.getBairro());
-            enderecoEntrega.setCidade(original.getCidade());
-            enderecoEntrega.setUf(original.getUf());
-            enderecoEntrega.setCliente(cliente);
-            cliente.getEnderecosEntrega().set(i, enderecoEntrega);
+        for (Endereco endereco : cliente.getEnderecos()) {
+            log.info("🔍 Endereço recebido do formulário: {}", endereco);
+
+            EnderecoViaCepDTO viaCep = buscarEnderecoViaCep(endereco.getCep());
+
+            // Preenche os campos do endereço com os dados da API ViaCEP
+            endereco.setLogradouro(viaCep.getLogradouro());
+            endereco.setBairro(viaCep.getBairro());
+            endereco.setCidade(viaCep.getCidade());
+            endereco.setUf(viaCep.getUf());
+
+            // Mantém vínculo com o cliente
+            endereco.setCliente(cliente);
+
+            log.info("✅ Endereço após preenchimento via ViaCEP: {}", endereco);
         }
     }
 
 
+
+
     private Endereco validarCep(String cep) {
         if (cep == null || cep.isBlank()) {
+            log.warn("❌ CEP vazio recebido.");
             throw new IllegalArgumentException("CEP não pode ser vazio");
         }
 
         String cepNumerico = cep.replaceAll("[^0-9]", "");
 
         if (cepNumerico.length() != 8) {
+            log.warn("❌ CEP inválido: {}", cep);
             throw new IllegalArgumentException("CEP deve conter 8 dígitos");
         }
 
         RestTemplate restTemplate = new RestTemplate();
         String url = "https://viacep.com.br/ws/" + cepNumerico + "/json/";
 
+        log.info("🔍 Buscando endereço para o CEP: {}", cepNumerico);
+
         try {
-            ResponseEntity<Endereco> response = restTemplate.getForEntity(url, Endereco.class);
+            ResponseEntity<EnderecoViaCepDTO> response = restTemplate.getForEntity(url, EnderecoViaCepDTO.class);
 
             if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+                log.error("❌ Erro na resposta do ViaCEP: status={}, body=null", response.getStatusCode());
                 throw new IllegalArgumentException("CEP não encontrado");
             }
 
-            Endereco endereco = response.getBody();
-            endereco.setCep(cep);
+            EnderecoViaCepDTO viaCep = response.getBody();
+
+            log.info("✅ Endereço retornado: {}, {}, {}", viaCep.getLogradouro(), viaCep.getBairro(), viaCep.getCidade());
+
+            // Constrói um Endereco (entidade) a partir do DTO
+            Endereco endereco = new Endereco();
+            endereco.setCep(viaCep.getCep());
+            endereco.setLogradouro(viaCep.getLogradouro());
+            endereco.setComplemento(viaCep.getComplemento());
+            endereco.setBairro(viaCep.getBairro());
+            endereco.setCidade(viaCep.getCidade());
+            endereco.setUf(viaCep.getUf());
+
             return endereco;
 
         } catch (HttpClientErrorException e) {
+            log.error("❌ Erro HTTP ao consultar CEP: {}", e.getMessage());
             throw new IllegalArgumentException("Erro ao consultar CEP: " + e.getMessage());
         } catch (Exception e) {
+            log.error("❌ Erro inesperado ao consultar CEP: {}", e.getMessage());
             throw new IllegalArgumentException("Serviço de CEP indisponível no momento");
         }
     }
+
+
     @Override
     public void alterarSenha(Cliente cliente, String novaSenha) {
         cliente.setSenha(passwordEncoder.encode(novaSenha));
         clienteRepository.save(cliente);
     }
+
+    private EnderecoViaCepDTO buscarEnderecoViaCep(String cep) {
+        if (cep == null || cep.isBlank()) {
+            throw new IllegalArgumentException("CEP não pode ser vazio");
+        }
+
+        String cepNumerico = cep.replaceAll("[^0-9]", "");
+        if (cepNumerico.length() != 8) {
+            throw new IllegalArgumentException("CEP deve conter 8 dígitos");
+        }
+
+        String url = "https://viacep.com.br/ws/" + cepNumerico + "/json/";
+
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<EnderecoViaCepDTO> response = restTemplate.getForEntity(url, EnderecoViaCepDTO.class);
+
+            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+                throw new IllegalArgumentException("Erro ao buscar o CEP: resposta inválida da API");
+            }
+
+            return response.getBody();
+
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Erro ao consultar o CEP: " + e.getMessage());
+        }
+    }
+
 
 }

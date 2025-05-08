@@ -15,7 +15,7 @@ import java.util.UUID;
 @Builder
 public class ImagemProduto {
 
-    @Id
+     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "imagem_id")
     private Long id;
