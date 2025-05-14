@@ -84,6 +84,12 @@
             <!-- Cabeçalho -->
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h4 class="fw-bold text-danger">Produtos</h4>
+                <a th:if="${tipoUsuario == 'ESTOQUISTA'}"
+                   th:href="@{/estoquista/pedidos}"
+                   class="btn btn-outline-primary">
+                    <i class="bi bi-list-check"></i> Gerenciar Pedidos
+                </a>
+
                 <a th:href="@{/produtos/novo}" class="btn btn-success">
                     <i class="bi bi-plus-lg"></i> Novo Produto
                 </a>

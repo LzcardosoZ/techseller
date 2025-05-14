@@ -1,8 +1,12 @@
 package br.com.techseller.techsellers.entity;
 
 import br.com.techseller.techsellers.enums.FormaPagamento;
+import br.com.techseller.techsellers.enums.StatusPedido;
 import jakarta.persistence.*;
 import lombok.Data;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -36,7 +40,8 @@ public class Pedido {
     private LocalDateTime dataPedido = LocalDateTime.now();
 
     @Column(nullable = false)
-    private String status = "AGUARDANDO PAGAMENTO";
+    @Enumerated(EnumType.STRING)
+    private StatusPedido status = StatusPedido.AGUARDANDO_PAGAMENTO;
 
     @OneToOne(mappedBy = "pedido", cascade = CascadeType.ALL)
     private PagamentoCartao pagamentoCartao;

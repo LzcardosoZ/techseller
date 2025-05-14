@@ -2,43 +2,37 @@
 <html lang="pt" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
-  <title>Detalhes do Pedido - TechSeller</title>
+  <title>Editar Pedido - TechSeller</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <style>
-    :root {
-      --cor-primaria: #2c3e50;
-      --cor-secundaria: #3498db;
+    body {
+      font-family: 'Segoe UI', sans-serif;
     }
     .navbar-techseller {
-      background: linear-gradient(135deg, var(--cor-primaria), var(--cor-secundaria));
+      background: linear-gradient(135deg, #2c3e50, #3498db);
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
     footer {
-      background-color: var(--cor-primaria);
+      background-color: #2c3e50;
       color: white;
-    }
-    footer a {
-      color: white;
-      text-decoration: none;
-    }
-    footer a:hover {
-      text-decoration: underline;
+      padding: 20px 0;
     }
   </style>
 </head>
 <body>
 
+<!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark navbar-techseller">
   <div class="container">
+    <!-- Logo -->
     <a class="navbar-brand" href="/">
       <span class="fs-4 fw-bold text-white">TechSeller</span>
     </a>
-
-    <div class="d-flex align-items-center gap-3">
-      <!-- Dropdown do usuário logado -->
-      <div class="dropdown" th:if="${usuarioLogado != null}">
-        <a class="btn btn-outline-light dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown">
+    <!-- Controles do Usuário -->
+    <div class="d-flex align-items-center">
+      <div class="dropdown me-3" th:if="${usuarioLogado != null}">
+        <a class="btn btn-outline-light dropdown-toggle" href="#" role="button" id="dropdownMenuLinkLogado" data-bs-toggle="dropdown">
           Olá, <span th:text="${usuarioLogado.username.contains('@') ? usuarioLogado.username.substring(0, usuarioLogado.username.indexOf('@')) : usuarioLogado.username}"></span>
         </a>
         <ul class="dropdown-menu">
@@ -59,19 +53,17 @@
           </li>
           <li><hr class="dropdown-divider"></li>
           <li>
-            <form th:action="@{/logout}" method="post" style="display: inline;">
-              <button type="submit" class="dropdown-item" style="border: none; background: none; padding: 0;">
+            <form id="logoutForm" th:action="@{/logout}" method="post" style="display: inline;">
+              <button type="button" class="dropdown-item" style="border: none; background: none; padding: 0;" onclick="logoutWithToast()">
                 <i class="bi bi-box-arrow-right"></i> Sair
               </button>
             </form>
-
           </li>
         </ul>
-      </div>
 
-      <!-- Usuário não logado -->
-      <div class="dropdown" th:if="${usuarioLogado == null}">
-        <a class="btn btn-outline-light dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown">
+      </div>
+      <div class="dropdown me-3" th:if="${usuarioLogado == null}">
+        <a class="btn btn-outline-light dropdown-toggle" href="#" role="button" id="dropdownMenuLinkNaoLogado" data-bs-toggle="dropdown">
           Minha Conta
         </a>
         <ul class="dropdown-menu">
@@ -87,60 +79,59 @@
           </li>
         </ul>
       </div>
-
-      <!-- Carrinho -->
       <a href="/carrinho" class="btn btn-light position-relative">
         <i class="bi bi-cart3"></i>
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartBadge">
+                    <span th:text="${carrinho != null ? carrinho.totalItens : 0}"></span>
+                    <span class="visually-hidden">itens no carrinho</span>
+                </span>
       </a>
     </div>
   </div>
 </nav>
 
+<!-- Conteúdo principal -->
+<div class="container">
+  <h2 class="mb-4">Editar Status do Pedido</h2>
 
-<main class="container my-5">
-  <h2 class="mb-4">Detalhes do Pedido #<span th:text="${pedido.id}">123</span></h2>
+  <form th:action="@{'/estoquista/pedidos/' + ${pedido.id} + '/atualizar'}" method="post" class="border p-4 rounded shadow-sm bg-light">
+    <div class="mb-3">
+      <label class="form-label">ID do Pedido:</label>
+      <input type="text" class="form-control" th:value="${pedido.id}" readonly>
+    </div>
 
-  <div class="mb-4">
-    <p><strong>Data:</strong> <span th:text="${#temporals.format(pedido.dataPedido, 'dd/MM/yyyy HH:mm')}">01/01/2025</span></p>
-    <p><strong>Valor Total:</strong> R$ <span th:text="${pedido.valorTotal}">0.00</span></p>
-    <p><strong>Status:</strong> <span th:text="${pedido.status}">Aguardando Pagamento</span></p>
-    <p><strong>Endereço de Entrega: </strong><span th:text="${pedido.enderecoEntrega.logradouro + ', ' + pedido.enderecoEntrega.numero + ' - ' + pedido.enderecoEntrega.cidade}">Rua Exemplo, 123 - Cidade</span></p>
-    <p><strong>Forma de Pagamento: </strong><span th:text="${pedido.formaPagamento}">Cartão de Crédito</span></p>
-  </div>
+    <div class="mb-3">
+      <label class="form-label">Data do Pedido:</label>
+      <input type="text" class="form-control" th:value="${#temporals.format(pedido.dataPedido, 'dd/MM/yyyy HH:mm')}" readonly>
+    </div>
 
-  <h4 class="mt-4">Itens do Pedido</h4>
-  <table class="table table-bordered">
-    <thead>
-    <tr>
-      <th>Produto</th>
-      <th>Qtd</th>
-      <th>Valor Unitário</th>
-      <th>Subtotal</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="item : ${pedido.itens}">
-      <td th:text="${item.produto.nome}">Produto</td>
-      <td th:text="${item.quantidade}">1</td>
-      <td th:text="'R$ ' + ${item.produto.preco}">R$ 0,00</td>
-      <td th:text="'R$ ' + ${item.subtotal}">R$ 0,00</td>
-    </tr>
+    <div class="mb-3">
+      <label class="form-label">Valor Total:</label>
+      <input type="text" class="form-control" th:value="'R$ ' + ${pedido.valorTotal}" readonly>
+    </div>
 
-    <!-- Mensagem se lista estiver vazia -->
-    <tr th:if="${#lists.isEmpty(pedido.itens)}">
-    <td colspan="4" class="text-center text-muted">Este pedido não possui itens registrados.</td>
-    </tr>
-    </tbody>
+    <div class="mb-3">
+      <label class="form-label">Status do Pedido:</label>
+      <select class="form-select" name="status">
+        <option th:each="s : ${T(br.com.techseller.techsellers.enums.StatusPedido).values()}"
+                th:value="${s.name()}"
+                th:text="${s.name().replace('_', ' ').toLowerCase()}"
+                th:selected="${s == pedido.status}">
+        </option>
+      </select>
 
-  </table>
+    </div>
 
-  <div class="mt-4">
-    <a href="/meus-pedidos" class="btn btn-outline-secondary">
-      <i class="bi bi-arrow-left"></i> Voltar aos pedidos
+    <button type="submit" class="btn btn-primary">
+      <i class="bi bi-check-circle"></i> Atualizar Status
+    </button>
+    <a th:href="@{/estoquista/pedidos}" class="btn btn-secondary ms-2">
+      <i class="bi bi-arrow-left-circle"></i> Voltar
     </a>
-  </div>
-</main>
+  </form>
+</div>
 
+<!-- Rodapé -->
 <footer style="background-color: #2a2a2a; padding: 20px 0; font-family: Arial, sans-serif; color: white;">
   <table width="100%" border="0" cellspacing="0" cellpadding="15" style="max-width: 1200px; margin: 0 auto; border-collapse: collapse;">
     <tr>

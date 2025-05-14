@@ -3,6 +3,7 @@ package br.com.techseller.techsellers.controller;
 import br.com.techseller.techsellers.entity.Carrinho;
 import br.com.techseller.techsellers.entity.ImagemProduto;
 import br.com.techseller.techsellers.entity.Produto;
+import br.com.techseller.techsellers.entity.User;
 import br.com.techseller.techsellers.service.CarrinhoService;
 import br.com.techseller.techsellers.service.ProdutoService;
 import br.com.techseller.techsellers.service.ArmazenamentoImagemService;
@@ -23,10 +24,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.apache.commons.lang3.StringUtils;
+
 
 
 import java.io.IOException;
@@ -51,21 +54,28 @@ public class ProdutoController {
     private ArmazenamentoImagemService armazenamentoImagemService;
 
 
-    @GetMapping ("/gerenciar-produtos")
+    @GetMapping("/gerenciar-produtos")
     public String listarProdutos(@RequestParam(required = false) String filtro, Model model) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String nomeUsuario = auth.getName();
-        model.addAttribute("nomeUsuario", nomeUsuario);
+        Object principal = auth.getPrincipal();
 
-        // Carrega as imagens junto com os produtos
+        if (principal instanceof br.com.techseller.techsellers.entity.User usuario) {
+            model.addAttribute("nomeUsuario", usuario.getUsername());
+            model.addAttribute("tipoUsuario", usuario.getGrupo().name());
+            model.addAttribute("grupo", usuario.getGrupo());
+        } else {
+            model.addAttribute("nomeUsuario", auth.getName());
+            model.addAttribute("tipoUsuario", null);
+            model.addAttribute("grupo", null);
+        }
+
         List<Produto> produtos = produtoService.listarProdutos(filtro);
         model.addAttribute("produtos", produtos);
-
-        // Adiciona utilitário para strings
         model.addAttribute("stringUtils", new StringUtils());
 
         return "listarProdutos";
     }
+
 
     @GetMapping("/novo")
     public String exibirFormularioCadastro(Model model) {
@@ -399,4 +409,24 @@ public class ProdutoController {
             return "loja";
         }
     }
+
+    @PostMapping("/test-salvar")
+    @ResponseBody
+    public ResponseEntity<?> salvarProdutoTest(
+            @ModelAttribute Produto produto,
+            @RequestParam(value = "imagens", required = false) MultipartFile[] imagens) throws IOException {
+
+        // Defina as imagens no objeto Produto, se necessário
+        produto.setArquivosImagens(imagens != null ? imagens : new MultipartFile[0]);
+
+        produtoService.salvarProduto(produto, produto.getArquivosImagens());
+        return ResponseEntity.ok("Produto salvo no modo teste");
+    }
+
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.setDisallowedFields("imagens");
+    }
+
+
 }

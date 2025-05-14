@@ -15,6 +15,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import br.com.techseller.techsellers.enums.StatusPedido;
 
 
 import java.math.BigDecimal;
@@ -215,7 +216,7 @@ public class CarrinhoController {
         pedido.setValorTotal(carrinho.getTotalComFrete());
         pedido.setFormaPagamento(FormaPagamento.valueOf(formaPagamento));
         pedido.setDataPedido(LocalDateTime.now());
-        pedido.setStatus("AGUARDANDO PAGAMENTO");
+        pedido.setStatus(StatusPedido.AGUARDANDO_PAGAMENTO);
 
 // Converte itens do carrinho em itens do pedido
         List<PedidoItem> itensPedido = new ArrayList<>();

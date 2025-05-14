@@ -1,12 +1,14 @@
-/*package br.com.techseller.techsellers.service;
+package br.com.techseller.techsellers.service;
 
 import br.com.techseller.techsellers.entity.User;
 import br.com.techseller.techsellers.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
@@ -18,8 +20,11 @@ public class UserServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     @InjectMocks
-    private UserService userService;
+    private UserServiceImpl userService; // Use a implementação concreta, não a interface
 
     @BeforeEach
     void setUp() {
@@ -29,17 +34,25 @@ public class UserServiceTest {
     @Test
     void deveCriarUsuarioComDadosValidos() {
         User user = new User();
-        user.setNome("Fulano");
+        user.setUsername("Fulano");
         user.setEmail("fulano@email.com");
-        user.setSenha("123456");
+        user.setPassword("123456");
+        user.setCpf("12345678909");
 
         when(userRepository.save(any(User.class))).thenReturn(user);
 
-        User salvo = userService.salvar(user);
+        when(passwordEncoder.encode(any(CharSequence.class))).thenReturn("senhaCriptografada");
 
+        userService.registeruser(user);
+
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+
+        User salvo = captor.getValue();
         assertNotNull(salvo);
-        assertEquals("Fulano", salvo.getNome());
-        verify(userRepository, times(1)).save(user);
+        assertEquals("Fulano", salvo.getUsername());
+        assertEquals("fulano@email.com", salvo.getEmail());
+        assertEquals("senhaCriptografada", salvo.getPassword());
     }
 
     @Test
@@ -50,10 +63,9 @@ public class UserServiceTest {
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
 
-        Optional<User> resultado = userService.buscarPorEmail(email);
+        Optional<User> resultado = userService.findByEmail(email);
 
         assertTrue(resultado.isPresent());
         assertEquals(email, resultado.get().getEmail());
     }
 }
-*/

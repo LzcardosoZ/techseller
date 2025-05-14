@@ -27,7 +27,7 @@
 		<url/>
 	</scm>
 	<properties>
-		<java.version>23</java.version>
+		<java.version>20</java.version>
 		<thymeleaf.version>3.1.2.RELEASE</thymeleaf.version>
 		<thymeleaf-spring.version>3.1.2.RELEASE</thymeleaf-spring.version>
 	</properties>

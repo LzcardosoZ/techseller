@@ -1,5 +1,6 @@
 package br.com.techseller.techsellers.security;
 
+import br.com.techseller.techsellers.service.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,19 +19,38 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    @Autowired
+    private CustomSuccessHandler customSuccessHandler;
+
+    /**
+     * Define explicitamente que o UserDetailsService usado será o CustomUserDetailsService
+     */
+    @Bean
+    public UserDetailsService userDetailsService(CustomUserDetailsService customUserDetailsService) {
+        return customUserDetailsService;
+    }
+
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider(UserDetailsService userDetailsService) {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers(
-                                "/login",                 // login de admin/estoquista
-                                "/login_cliente",         // login de cliente
-                                "/clientes/cadastro",     // formulário de cadastro (GET)
-                                "/clientes/cadastrar"     // envio do formulário (POST)
+                                "/login",
+                                "/login_cliente",
+                                "/clientes/cadastro",
+                                "/clientes/cadastrar"
                         ).permitAll()
                         .requestMatchers("/produtos/editar/**").hasAnyRole("ADMIN", "ESTOQUISTA")
-                        .requestMatchers("/produtos/gerenciar-produtos").hasAnyRole("ADMIN", "ESTOQUISTA")
+                        .requestMatchers("/gerenciar-produtos").hasAnyRole("ADMIN", "ESTOQUISTA")
                         .requestMatchers(HttpMethod.GET, "/menu", "/listarUsuarios", "/usuarios/**", "/home").authenticated()
                         .requestMatchers("/", "/loja/**", "/carrinho", "/carrinho/adicionar", "/carrinho/remover",
                                 "/carrinho/atualizar", "/carrinho/frete", "/css/**", "/js/**", "/img/**").permitAll()
@@ -38,13 +58,11 @@ public class SecurityConfig {
                         .requestMatchers("/pedido/sucesso").permitAll()
                         .anyRequest().authenticated()
                 )
-
-
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/h2-console/**") // <- ESSENCIAL
+                        .ignoringRequestMatchers("/h2-console/**")
                 )
                 .headers(headers -> headers
-                        .frameOptions(frameOptions -> frameOptions.disable()) // <- ou .sameOrigin() se quiser manter segurança
+                        .frameOptions(frameOptions -> frameOptions.disable())
                 )
                 .formLogin(form -> form
                         .loginPage("/login_cliente")
@@ -63,27 +81,7 @@ public class SecurityConfig {
                         .permitAll()
                 );
 
-
         return http.build();
-    }
-
-
-    @Autowired
-    private CustomSuccessHandler customSuccessHandler;
-
-    private final UserDetailsService userDetailsService;
-
-    public SecurityConfig(UserDetailsService userDetailsService) {
-        this.userDetailsService = userDetailsService;
-    }
-
-
-    @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
-        return authProvider;
     }
 
     @Bean

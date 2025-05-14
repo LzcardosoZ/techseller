@@ -2,10 +2,7 @@ package br.com.techseller.techsellers.entity;
 
 import br.com.techseller.techsellers.enums.Grupo;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -28,6 +25,7 @@ public class User implements UserDetails {
     private Long user_id;
 
     @Getter
+    @Setter
     @Column(name = "USERNAME", nullable = false)
     private String username;
 
@@ -43,6 +41,7 @@ public class User implements UserDetails {
     @Column(name = "GRUPO")
     private Grupo grupo;
 
+    @Setter
     @Column(name = "PASSWORD", nullable = false)
     @NotBlank(message = "A senha é obrigatória")
     private String password;
