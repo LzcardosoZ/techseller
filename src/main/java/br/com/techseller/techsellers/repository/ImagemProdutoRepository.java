@@ -21,12 +21,4 @@ public interface ImagemProdutoRepository extends JpaRepository<ImagemProduto, Lo
     @Query("SELECT i FROM ImagemProduto i WHERE i.produto.produtoId = :produtoId ORDER BY i.ordem ASC")
     List<ImagemProduto> findByProdutoOrderByOrdem(@Param("produtoId") Long produtoId);
 
-    // Novo método adicionado
-    int countByProdutoProdutoId(Long produtoId);
-
-    int countByProduto(Produto produto);
-
-    // Ou alternativa com @Query
-    // @Query("SELECT COUNT(i) FROM ImagemProduto i WHERE i.produto.produtoId = :produtoId")
-    // int countByProdutoId(@Param("produtoId") Long produtoId);
 }

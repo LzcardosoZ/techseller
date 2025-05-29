@@ -61,12 +61,12 @@ public class ClienteController {
                                    @RequestParam(name = "from", defaultValue = "loja") String from,
                                    Model model) {
 
-        log.info("📥 Requisição recebida para cadastro de cliente: {}", cliente.getEmail());
+        log.info("Requisição recebida para cadastro de cliente: {}", cliente.getEmail());
 
         model.addAttribute("generos", Arrays.asList("Masculino", "Feminino", "Outro"));
 
         if (result.hasErrors()) {
-            log.warn("❌ Erros de validação no formulário: {}", result.getAllErrors());
+            log.warn("Erros de validação no formulário: {}", result.getAllErrors());
 
             preencherEnderecosMinimos(cliente);
             model.addAttribute("cliente", cliente);
@@ -74,7 +74,7 @@ public class ClienteController {
         }
 
         if (!cliente.getSenha().equals(confirmarSenha)) {
-            log.warn("❌ Senhas não coincidem para: {}", cliente.getEmail());
+            log.warn("Senhas não coincidem para: {}", cliente.getEmail());
             model.addAttribute("erroSenha", "As senhas não coincidem.");
 
             preencherEnderecosMinimos(cliente);
@@ -84,7 +84,7 @@ public class ClienteController {
 
         try {
             if (clienteService.emailJaCadastrado(cliente.getEmail())) {
-                log.warn("⚠️ E-mail já cadastrado: {}", cliente.getEmail());
+                log.warn("E-mail já cadastrado: {}", cliente.getEmail());
                 model.addAttribute("erroEmail", "Este e-mail já está em uso");
 
                 preencherEnderecosMinimos(cliente);
@@ -95,11 +95,10 @@ public class ClienteController {
             clienteService.cadastrarCliente(cliente);
             log.info("✅ Cadastro finalizado com sucesso: {}", cliente.getEmail());
 
-            // ✅ redireciona para login com parâmetro de sucesso
             return "redirect:/login_cliente?cadastro=sucesso";
 
         } catch (IllegalArgumentException e) {
-            log.error("🚫 Erro ao cadastrar cliente: {}", e.getMessage());
+            log.error("Erro ao cadastrar cliente: {}", e.getMessage());
             model.addAttribute("erroCadastro", e.getMessage());
 
             preencherEnderecosMinimos(cliente);
@@ -120,16 +119,15 @@ public class ClienteController {
             Cliente cliente = clienteOpt.get();
 
             model.addAttribute("cliente", cliente);
-            model.addAttribute("enderecos", cliente.getEnderecosEntrega());       // os não-padrão
-            model.addAttribute("enderecoPadrao", cliente.getEnderecoPadrao());   // o atual padrão (visual)
+            model.addAttribute("enderecos", cliente.getEnderecosEntrega());
+            model.addAttribute("enderecoPadrao", cliente.getEnderecoPadrao());
 
-            return "conta"; // seu template HTML
+            return "conta";
         }
         return "redirect:/login_cliente";
     }
 
 
-    // ===== ATUALIZAR DADOS PESSOAIS =====
     @PostMapping("/conta/atualizarInfo")
     public String atualizarInfoPessoal(@ModelAttribute Cliente clienteAtualizado,
                                        @AuthenticationPrincipal UserDetails userDetails,
@@ -149,7 +147,6 @@ public class ClienteController {
         return "redirect:/clientes/conta";
     }
 
-    // ===== ALTERAR SENHA =====
     @PostMapping("/conta/alterarSenha")
     public String alterarSenha(@RequestParam String senhaAtual,
                                @RequestParam String novaSenha,
@@ -179,7 +176,6 @@ public class ClienteController {
         return "redirect:/clientes/conta";
     }
 
-    // ===== ADICIONAR NOVO ENDEREÇO =====
     @PostMapping("/conta/adicionarEndereco")
     public String adicionarEndereco(@RequestParam Map<String, String> enderecoParams,
                                     @RequestParam(name = "from", defaultValue = "conta") String from,
@@ -274,7 +270,7 @@ public class ClienteController {
 
         while (cliente.getEnderecos().size() < 2) {
             Endereco novo = new Endereco();
-            novo.setPadrao(cliente.getEnderecos().isEmpty()); // o primeiro é faturamento
+            novo.setPadrao(cliente.getEnderecos().isEmpty());
             cliente.getEnderecos().add(novo);
         }
     }

@@ -22,9 +22,6 @@ public class SecurityConfig {
     @Autowired
     private CustomSuccessHandler customSuccessHandler;
 
-    /**
-     * Define explicitamente que o UserDetailsService usado será o CustomUserDetailsService
-     */
     @Bean
     public UserDetailsService userDetailsService(CustomUserDetailsService customUserDetailsService) {
         return customUserDetailsService;

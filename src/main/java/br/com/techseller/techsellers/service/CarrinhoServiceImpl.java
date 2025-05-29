@@ -63,12 +63,6 @@ public class CarrinhoServiceImpl implements CarrinhoService {
     }
 
     @Override
-    public Carrinho limparCarrinho(Carrinho carrinho) {
-        carrinho.limpar();
-        return carrinho;
-    }
-
-    @Override
     public BigDecimal calcularTotal(Carrinho carrinho) {
         return carrinho.getTotal();
     }

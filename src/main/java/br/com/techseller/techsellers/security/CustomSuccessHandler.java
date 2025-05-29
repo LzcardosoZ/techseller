@@ -22,12 +22,12 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
             throws IOException, ServletException {
 
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-        String redirectURL = "/loja"; // padrão
+        String redirectURL = "/loja";
 
         for (GrantedAuthority authority : authorities) {
             String role = authority.getAuthority();
             if (role.equals("ROLE_ADMIN")) {
-                redirectURL = "/home"; // você pode criar essa rota
+                redirectURL = "/home";
                 break;
             } else if (role.equals("ROLE_ESTOQUISTA")) {
                 redirectURL = "/produtos/gerenciar-produtos";

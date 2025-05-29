@@ -95,7 +95,6 @@ public class ProdutoController {
             model.addAttribute("produto", produto);
             return "cadastroProduto";
         }
-
         try {
             // Validação básica das imagens
             if (!produto.temArquivosImagens()) {

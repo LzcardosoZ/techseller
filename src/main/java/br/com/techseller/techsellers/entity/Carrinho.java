@@ -52,28 +52,26 @@ public class Carrinho implements Serializable {
     }
 
     public List<ItemCarrinho> getItens() {
-        return new ArrayList<>(itens); // Retorna cópia para evitar modificações externas
+        return new ArrayList<>(itens);
     }
 
     public void limpar() {
         itens.clear();
     }
-    // Novo atributo
+
     private BigDecimal valorFrete = BigDecimal.ZERO;
 
-    // Getter
+
     public BigDecimal getValorFrete() {
         return valorFrete;
     }
 
-    // Setter
+
     public void setValorFrete(BigDecimal valorFrete) {
         this.valorFrete = valorFrete;
     }
 
-    // Total com frete incluso
     public BigDecimal getTotalComFrete() {
         return getTotal().add(valorFrete != null ? valorFrete : BigDecimal.ZERO);
     }
-
 }

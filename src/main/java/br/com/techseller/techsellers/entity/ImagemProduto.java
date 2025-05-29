@@ -20,11 +20,11 @@ public class ImagemProduto {
     @Column(name = "imagem_id")
     private Long id;
 
-    // Campo opcional - manter temporariamente para migração
+
     @Lob
     @Column(columnDefinition = "LONGBLOB")
     @Basic(fetch = FetchType.LAZY)
-    private byte[] imagem;  // Pode ser removido após migração completa
+    private byte[] imagem;
 
     @Column(nullable = false)
     private Boolean imagemPrincipal;
@@ -56,7 +56,6 @@ public class ImagemProduto {
     @EqualsAndHashCode.Exclude
     private Produto produto;
 
-    // Método para definir o produto mantendo a consistência bidirecional
     public void setProduto(Produto produto) {
         if (this.produto != null) {
             this.produto.getImagens().remove(this);
@@ -67,14 +66,4 @@ public class ImagemProduto {
         }
     }
 
-    // Método para obter a extensão do arquivo
-    public String getExtensao() {
-        return nomeArquivo.substring(nomeArquivo.lastIndexOf(".") + 1);
-    }
-
-    // Método para gerar um nome de arquivo único
-    public static String gerarNomeUnico(String nomeOriginal) {
-        String extensao = nomeOriginal.substring(nomeOriginal.lastIndexOf("."));
-        return UUID.randomUUID().toString() + extensao;
-    }
 }

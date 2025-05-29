@@ -195,7 +195,7 @@ public class CarrinhoController {
             return "redirect:/carrinho/finalizar";
         }
 
-        // 🔒 Validação dos campos obrigatórios se for CARTÃO
+        // Validação dos campos obrigatórios se for CARTÃO
         if (formaPagamento.equals("CARTAO")) {
             if (nomeTitular == null || nomeTitular.isBlank() ||
                     numeroCartao == null || numeroCartao.isBlank() ||
@@ -208,7 +208,7 @@ public class CarrinhoController {
             }
         }
 
-        // Cria o pedido
+
         // Cria o pedido
         Pedido pedido = new Pedido();
         pedido.setCliente(cliente);
@@ -218,7 +218,7 @@ public class CarrinhoController {
         pedido.setDataPedido(LocalDateTime.now());
         pedido.setStatus(StatusPedido.AGUARDANDO_PAGAMENTO);
 
-// Converte itens do carrinho em itens do pedido
+        // Converte itens do carrinho em itens do pedido
         List<PedidoItem> itensPedido = new ArrayList<>();
 
         for (ItemCarrinho item : carrinho.getItens()) {
@@ -311,7 +311,7 @@ public class CarrinhoController {
 
     @GetMapping("/pedido/sucesso")
     public String pedidoSucesso() {
-        return "pedido-sucesso"; // view que vai usar os dados flash
+        return "pedido-sucesso";
     }
 
 

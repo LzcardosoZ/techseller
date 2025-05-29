@@ -37,7 +37,6 @@ public class Cliente {
     @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Endereco> enderecos = new ArrayList<>();
 
-
     // Endereço de faturamento (padrao = true)
     public Endereco getEnderecoFaturamento() {
         return enderecos.stream()
@@ -59,6 +58,4 @@ public class Cliente {
                 .findFirst()
                 .orElse(null);
     }
-
-
 }

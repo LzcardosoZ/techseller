@@ -16,7 +16,6 @@
     <form th:action="@{/clientes/cadastrar}" th:object="${cliente}" method="post" id="formCliente">
         <input type="hidden" name="from" th:value="${from}">
 
-        <!-- Dados Pessoais -->
         <div class="mb-4">
             <h4>Dados Pessoais</h4>
             <div class="row">
@@ -61,7 +60,6 @@
             </div>
         </div>
 
-        <!-- Endereço de Faturamento -->
         <div class="mb-4">
             <h4 class="text-center">Endereço de Faturamento*</h4>
             <div class="row g-3">
@@ -98,8 +96,6 @@
             </div>
         </div>
 
-
-        <!-- Endereços de Entrega -->
         <div class="text-center mb-3">
             <h4>Endereços de Entrega</h4>
         </div>
@@ -110,7 +106,6 @@
                 <label class="form-check-label" for="copiarEndereco">Usar mesmo endereço de faturamento</label>
             </div>
         </div>
-
 
     <div id="enderecosEntrega">
         <div class="endereco-entrega">
@@ -148,15 +143,11 @@
         + Adicionar outro endereço
     </button>
 
-
-
 <div class="d-grid gap-2">
             <button type="submit" class="btn btn-primary btn-lg">Cadastrar</button>
         </div>
     </form>
 </div>
-
-
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>

@@ -73,16 +73,14 @@ public class UserController {
     @GetMapping("/login_cliente")
     public String exibirLoginCliente(Model model) {
         // Se desejar passar alguma informação para a view, adicione atributos ao model
-        return "login_cliente"; // Nome do template (login_cliente.html)
+        return "login_cliente";
     }
-
-
 
     // Página Home após login bem-sucedido
     @GetMapping("/home")
     public String home(Model model, @AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {
-            return "redirect:/login?logout"; // ou apenas "/login"
+            return "redirect:/login?logout";
         }
 
         Optional<User> usuarioLogadoOpt = userService.findByEmail(userDetails.getUsername());
@@ -91,7 +89,6 @@ public class UserController {
         return usuarioLogadoOpt.isPresent() ? "home" : "redirect:/login?error";
     }
 
-    // Página de cadastro
     @GetMapping("/cadastro")
     public String cadastro(Model model) {
         model.addAttribute("user", new User());
@@ -105,7 +102,6 @@ public class UserController {
             model.addAttribute("usuario", usuario);
             return "editar_usuario";
         } catch (RuntimeException e) {
-            // Caso o usuário não seja encontrado, redireciona para a listagem
             return "redirect:/listarUsuarios";
         }
     }
@@ -119,7 +115,7 @@ public class UserController {
         User usuarioExistente = userService.buscarPorId(user_id);
 
         if (usuarioExistente != null) {
-            // ✅ Atualiza campos básicos do formulário
+            //Atualiza campos básicos do formulário
             if (usuario.getNomeUsuario() != null && !usuario.getNomeUsuario().isBlank()) {
                 usuarioExistente.setNomeUsuario(usuario.getNomeUsuario());
             }
@@ -132,7 +128,7 @@ public class UserController {
                 usuarioExistente.setGrupo(usuario.getGrupo());
             }
 
-            // 🔐 Atualiza senha se informada
+            // Atualiza senha se informada
             if (usuario.getNewPassword() != null && !usuario.getNewPassword().isBlank()) {
                 if (!usuario.getNewPassword().equals(usuario.getConfNewPassword())) {
                     redirectAttributes.addFlashAttribute("error", "As senhas não coincidem!");
@@ -143,15 +139,11 @@ public class UserController {
                 usuarioExistente.setPassword(senhaCriptografada);
             }
 
-            // Salva alterações
             userService.atualizarUsuario(user_id, usuarioExistente);
         }
-
         redirectAttributes.addFlashAttribute("success", "Usuário atualizado com sucesso!");
         return "redirect:/listarUsuarios";
     }
-
-
 
     @PostMapping("/usuarios/alterarStatus/{user_id}")
     public String alterarStatusUsuario(@PathVariable("user_id") Long userId) {
@@ -165,9 +157,6 @@ public class UserController {
 
     @PostMapping("/registerUser")
     public String registerUser(@ModelAttribute("user") User user, Model model) {
-        String result = null;
-
-
         try {
             userService.registeruser(user);
             return "redirect:/login";
@@ -176,6 +165,4 @@ public class UserController {
             return "cadastroAdm";
         }
     }
-
-
 }

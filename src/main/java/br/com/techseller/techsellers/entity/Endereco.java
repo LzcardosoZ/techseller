@@ -16,11 +16,11 @@ public class Endereco {
     private String complemento;
     private String bairro;
 
-    @JsonProperty("localidade") // ← necessário para preencher corretamente
+    @JsonProperty("localidade")
     @Column(name = "cidade")
     private String cidade;
 
-    @JsonProperty("uf") // ← ViaCEP envia exatamente "uf"
+    @JsonProperty("uf")
     private String uf;
 
     private String numero;

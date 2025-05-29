@@ -7,6 +7,5 @@ import java.math.BigDecimal;
 
 public interface FreteService {
     BigDecimal calcularFretePorUF(String uf);
-    BigDecimal calcularFretePorCep(String cep);
     Endereco obterEnderecoPorCep(String cep);
 }

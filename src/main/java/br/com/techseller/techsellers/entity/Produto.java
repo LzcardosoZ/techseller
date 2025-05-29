@@ -73,15 +73,12 @@ public class Produto {
     @JsonIgnore
     private MultipartFile[] arquivosImagens;
 
+    @Setter
     @Transient
     @JsonIgnore
     private String imagemIds;
 
-    // ============== MÉTODOS AUXILIARES ==============
-
-    /**
-     * Garante que a lista de imagens nunca seja nula
-     */
+      // Garante que a lista de imagens nunca seja nula
     public List<ImagemProduto> getImagens() {
         if (this.imagens == null) {
             this.imagens = new ArrayList<>();
@@ -89,33 +86,15 @@ public class Produto {
         return this.imagens;
     }
 
-    /**
-     * Adiciona uma imagem à lista mantendo a consistência bidirecional
-     */
-    public void adicionarImagem(ImagemProduto imagem) {
-        getImagens().add(imagem);
-        imagem.setProduto(this);
-    }
-
-    /**
-     * Remove uma imagem da lista mantendo a consistência bidirecional
-     */
+    // Remove uma imagem da lista mantendo a consistência bidirecional
     public void removerImagem(ImagemProduto imagem) {
         getImagens().remove(imagem);
         imagem.setProduto(null);
     }
 
-    /**
-     * Verifica se o produto possui imagens associadas
-     */
-    @Transient
-    public boolean temImagens() {
-        return !getImagens().isEmpty();
-    }
 
-    /**
-     * Obtém a imagem principal do produto
-     */
+
+     // Obtém a imagem principal do produto
     @Transient
     public ImagemProduto getImagemPrincipal() {
         return getImagens().stream()
@@ -124,25 +103,22 @@ public class Produto {
                 .orElse(getImagens().isEmpty() ? null : getImagens().get(0));
     }
 
-    /**
-     * Método auxiliar para obter os arquivos de imagem
-     */
+
+     // Metodo auxiliar para obter os arquivos de imagem
     @Transient
     public MultipartFile[] getArquivosImagens() {
         return arquivosImagens;
     }
 
-    /**
-     * Método auxiliar para definir os arquivos de imagem
-     */
+
+    // Metodo auxiliar para definir os arquivos de imagem
     @Transient
     public void setArquivosImagens(MultipartFile[] arquivosImagens) {
         this.arquivosImagens = arquivosImagens;
     }
 
-    /**
-     * Verifica se há arquivos de imagem para upload
-     */
+
+    // Verifica se há arquivos de imagem para upload
     @Transient
     public boolean temArquivosImagens() {
         return arquivosImagens != null && arquivosImagens.length > 0 &&
@@ -157,7 +133,4 @@ public class Produto {
                 .collect(Collectors.joining(","));
     }
 
-    public void setImagemIds(String imagemIds) {
-        this.imagemIds = imagemIds;
-    }
 }
