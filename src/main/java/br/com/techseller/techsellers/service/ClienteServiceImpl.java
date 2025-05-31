@@ -3,6 +3,7 @@ package br.com.techseller.techsellers.service;
 import br.com.techseller.techsellers.dto.EnderecoViaCepDTO;
 import br.com.techseller.techsellers.entity.Cliente;
 import br.com.techseller.techsellers.entity.Endereco;
+import br.com.techseller.techsellers.enums.TipoEndereco;
 import br.com.techseller.techsellers.repository.ClienteRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -16,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -43,14 +46,30 @@ public class ClienteServiceImpl implements ClienteService {
 
         cliente.setSenha(passwordEncoder.encode(cliente.getSenha()));
 
-        log.info("📥 Cliente antes da validação de endereços: {}", cliente);
+        log.info("Cliente antes da validação de endereços: {}", cliente);
 
         validarEnderecos(cliente);
 
-        // Exibe os dados completos dos endereços logo antes de salvar
-        log.info("📦 Endereços prontos para salvar:");
+        // Vincula os endereços ao cliente e valida tipo FATURAMENTO
+        boolean encontrouFaturamento = false;
         for (Endereco endereco : cliente.getEnderecos()) {
-            log.info("👉 {}", endereco);
+            endereco.setCliente(cliente);
+
+            if (TipoEndereco.FATURAMENTO.equals(endereco.getTipo())) {
+                if (encontrouFaturamento) {
+                    throw new IllegalArgumentException("Mais de um endereço de faturamento encontrado.");
+                }
+                encontrouFaturamento = true;
+            }
+        }
+
+        if (!encontrouFaturamento) {
+            throw new IllegalArgumentException("É obrigatório definir um endereço de faturamento.");
+        }
+
+        log.info("Endereços prontos para salvar:");
+        for (Endereco endereco : cliente.getEnderecos()) {
+            log.info("{}", endereco);
         }
 
         try {
@@ -63,9 +82,6 @@ public class ClienteServiceImpl implements ClienteService {
         }
     }
 
-
-
-
     @Override
     public void atualizarCliente(Cliente clienteAtualizado) {
         Cliente cliente = clienteRepository.findById(clienteAtualizado.getId())
@@ -75,24 +91,24 @@ public class ClienteServiceImpl implements ClienteService {
         cliente.setDataNascimento(clienteAtualizado.getDataNascimento());
         cliente.setGenero(clienteAtualizado.getGenero());
 
-        if (clienteAtualizado.getSenha() != null && !clienteAtualizado.getSenha().isBlank()) {
+        if (clienteAtualizado.getSenha() != null
+                && !clienteAtualizado.getSenha().isBlank()
+                && !clienteAtualizado.getSenha().startsWith("$2a$")) {
             cliente.setSenha(passwordEncoder.encode(clienteAtualizado.getSenha()));
         }
 
-        // Se estiver vindo com endereços atualizados (ex: em edição total), substitui
+        // ✅ Corrigido para evitar ConcurrentModificationException
         if (clienteAtualizado.getEnderecos() != null && !clienteAtualizado.getEnderecos().isEmpty()) {
-            for (Endereco endereco : clienteAtualizado.getEnderecos()) {
-                endereco.setCliente(cliente);
+            List<Endereco> novosEnderecos = new ArrayList<>();
+            for (Endereco novoEndereco : clienteAtualizado.getEnderecos()) {
+                novoEndereco.setCliente(cliente);
+                novosEnderecos.add(novoEndereco);
             }
-            cliente.setEnderecos(clienteAtualizado.getEnderecos());
+            cliente.getEnderecos().addAll(novosEnderecos);
         }
-
-        // Caso contrário, assume que os endereços já estão atualizados diretamente no objeto
 
         clienteRepository.save(cliente);
     }
-
-
 
     @Override
     public boolean emailExiste(String email) {
@@ -220,6 +236,11 @@ public class ClienteServiceImpl implements ClienteService {
         } catch (Exception e) {
             throw new IllegalArgumentException("Erro ao consultar o CEP: " + e.getMessage());
         }
+    }
+
+    @Override
+    public Optional<Cliente> buscarPorEmailComEnderecos(String email) {
+        return clienteRepository.buscarPorEmailComEnderecos(email);
     }
 
 
