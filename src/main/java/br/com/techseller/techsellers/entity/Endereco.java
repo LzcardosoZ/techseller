@@ -1,7 +1,10 @@
 package br.com.techseller.techsellers.entity;
 
+import br.com.techseller.techsellers.enums.TipoEndereco;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Entity
@@ -11,22 +14,33 @@ public class Endereco {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "CEP é obrigatório")
     private String cep;
+
+    @NotBlank(message = "Logradouro é obrigatório")
     private String logradouro;
-    private String complemento;
-    private String bairro;
 
-    @JsonProperty("localidade") // ← necessário para preencher corretamente
-    @Column(name = "cidade")
-    private String cidade;
-
-    @JsonProperty("uf") // ← ViaCEP envia exatamente "uf"
-    private String uf;
-
+    @NotBlank(message = "Número é obrigatório")
     private String numero;
 
-    @Column(name = "padrao")
-    private Boolean padrao = false;
+    @NotBlank(message = "Bairro é obrigatório")
+    private String bairro;
+
+    private String complemento;
+
+    @JsonProperty("localidade")
+    @Column(name = "cidade")
+    @NotBlank(message = "Cidade é obrigatória")
+    private String cidade;
+
+    @JsonProperty("uf")
+    @NotBlank(message = "UF é obrigatória")
+    @Size (min = 2, max = 2, message = "UF deve ter duas letras")
+    private String uf;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TipoEndereco tipo;
 
     @ManyToOne
     @JoinColumn(name = "cliente_id")
@@ -42,7 +56,7 @@ public class Endereco {
                 ", bairro='" + bairro + '\'' +
                 ", cidade='" + cidade + '\'' +
                 ", uf='" + uf + '\'' +
-                ", padrao=" + padrao +
+                ", tipo de endereco = =" + tipo +
                 '}';
     }
 

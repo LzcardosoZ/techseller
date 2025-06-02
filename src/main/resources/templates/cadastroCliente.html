@@ -16,7 +16,6 @@
     <form th:action="@{/clientes/cadastrar}" th:object="${cliente}" method="post" id="formCliente">
         <input type="hidden" name="from" th:value="${from}">
 
-        <!-- Dados Pessoais -->
         <div class="mb-4">
             <h4>Dados Pessoais</h4>
             <div class="row">
@@ -61,102 +60,110 @@
             </div>
         </div>
 
-        <!-- Endereço de Faturamento -->
         <div class="mb-4">
             <h4 class="text-center">Endereço de Faturamento*</h4>
+            <input type="hidden" th:field="*{enderecos[0].tipo}" value="FATURAMENTO">
             <div class="row g-3">
                 <div class="col-md-2">
                     <label class="form-label">CEP*</label>
-                    <input type="text" name="cepFaturamento" class="form-control" id="cepFaturamento">
+                    <input type="text" th:field="*{enderecos[0].cep}" class="form-control" id="cepFaturamento">
                     <button type="button" class="btn btn-sm btn-outline-secondary mt-1 w-100"
                             onclick="buscarEnderecoFaturamento()">Buscar CEP</button>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Logradouro*</label>
-                    <input type="text" name="logradouroFaturamento" class="form-control" id="logradouroFaturamento">
+                    <input type="text" th:field="*{enderecos[0].logradouro}" class="form-control" id="logradouroFaturamento">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Número*</label>
-                    <input type="text" name="numeroFaturamento" class="form-control" id="numeroFaturamento">
+                    <input type="text" th:field="*{enderecos[0].numero}" class="form-control" id="numeroFaturamento">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Complemento</label>
-                    <input type="text" name="complementoFaturamento" class="form-control" id="complementoFaturamento">
+                    <input type="text" th:field="*{enderecos[0].complemento}" class="form-control" id="complementoFaturamento">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Bairro*</label>
-                    <input type="text" name="bairroFaturamento" class="form-control" id="bairroFaturamento">
+                    <input type="text" th:field="*{enderecos[0].bairro}" class="form-control" id="bairroFaturamento">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Cidade*</label>
-                    <input type="text" name="cidadeFaturamento" class="form-control" id="cidadeFaturamento">
+                    <input type="text" th:field="*{enderecos[0].cidade}" class="form-control" id="cidadeFaturamento">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">UF*</label>
-                    <input type="text" name="ufFaturamento" class="form-control" id="ufFaturamento" maxlength="2">
+                    <input type="text" th:field="*{enderecos[0].uf}" class="form-control" id="ufFaturamento" maxlength="2">
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <div class="text-center mb-3">
+                <h4>Endereços de Entrega</h4>
+            </div>
+
+            <div class="d-flex justify-content-end mb-3">
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="copiarEndereco">
+                    <label class="form-check-label" for="copiarEndereco">Usar mesmo endereço de faturamento</label>
+                </div>
+            </div>
+
+            <div id="enderecosEntrega">
+                <div class="endereco-entrega">
+                    <input type="hidden" th:field="*{enderecos[1].tipo}" value="ENTREGA">
+
+                    <div class="row g-3">
+                        <div class="col-md-2">
+                            <label class="form-label">CEP*</label>
+                            <input type="text" th:field="*{enderecos[1].cep}" class="form-control" id="cepEntrega">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Logradouro*</label>
+                            <input type="text" th:field="*{enderecos[1].logradouro}" class="form-control" id="logradouroEntrega">
+                        </div>
+
+                        <div class="col-md-2">
+                            <label class="form-label">Número*</label>
+                            <input type="text" th:field="*{enderecos[1].numero}" class="form-control" id="numeroEntrega">
+                        </div>
+
+                        <div class="col-md-2">
+                            <label class="form-label">Complemento</label>
+                            <input type="text" th:field="*{enderecos[1].complemento}" class="form-control" id="complementoEntrega">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Bairro*</label>
+                            <input type="text" th:field="*{enderecos[1].bairro}" class="form-control" id="bairroEntrega">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Cidade*</label>
+                            <input type="text" th:field="*{enderecos[1].cidade}" class="form-control" id="cidadeEntrega">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">UF*</label>
+                            <input type="text" th:field="*{enderecos[1].uf}" class="form-control" id="ufEntrega" maxlength="2">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
 
-        <!-- Endereços de Entrega -->
-        <div class="text-center mb-3">
-            <h4>Endereços de Entrega</h4>
-        </div>
 
-        <div class="d-flex justify-content-end mb-3">
-            <div class="form-check">
-                <input type="checkbox" class="form-check-input" id="copiarEndereco">
-                <label class="form-check-label" for="copiarEndereco">Usar mesmo endereço de faturamento</label>
-            </div>
-        </div>
-
-
-    <div id="enderecosEntrega">
-        <div class="endereco-entrega">
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label">Logradouro*</label>
-                    <input type="text" name="logradouroEntrega" class="form-control">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Número*</label>
-                    <input type="text" name="numeroEntrega" class="form-control">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Complemento</label>
-                    <input type="text" name="complementoEntrega" class="form-control">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Bairro*</label>
-                    <input type="text" name="bairroEntrega" class="form-control">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Cidade*</label>
-                    <input type="text" name="cidadeEntrega" class="form-control">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">UF*</label>
-                    <input type="text" name="ufEntrega" class="form-control" maxlength="2">
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-    <button type="button" class="btn btn-outline-secondary mt-3" id="adicionarEndereco">
+        <button type="button" class="btn btn-outline-secondary mt-3" id="adicionarEndereco">
         + Adicionar outro endereço
     </button>
-
-
 
 <div class="d-grid gap-2">
             <button type="submit" class="btn btn-primary btn-lg">Cadastrar</button>
         </div>
     </form>
 </div>
-
-
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
@@ -184,23 +191,13 @@
 
     $('#copiarEndereco').change(function () {
         if (this.checked) {
-            const cep = $('#cepFaturamento').val();
-            const logradouro = $('#logradouroFaturamento').val();
-            const numero = $('#numeroFaturamento').val();
-            const complemento = $('#complementoFaturamento').val();
-            const bairro = $('#bairroFaturamento').val();
-            const cidade = $('#cidadeFaturamento').val();
-            const uf = $('#ufFaturamento').val();
-
-            $('#enderecosEntrega .endereco-entrega').each(function () {
-                $(this).find('input[name="cepEntrega"]').val(cep);
-                $(this).find('input[name="logradouroEntrega"]').val(logradouro);
-                $(this).find('input[name="numeroEntrega"]').val(numero);
-                $(this).find('input[name="complementoEntrega"]').val(complemento);
-                $(this).find('input[name="bairroEntrega"]').val(bairro);
-                $(this).find('input[name="cidadeEntrega"]').val(cidade);
-                $(this).find('input[name="ufEntrega"]').val(uf);
-            });
+            $('#cepEntrega').val($('#cepFaturamento').val());
+            $('#logradouroEntrega').val($('#logradouroFaturamento').val());
+            $('#numeroEntrega').val($('#numeroFaturamento').val());
+            $('#complementoEntrega').val($('#complementoFaturamento').val());
+            $('#bairroEntrega').val($('#bairroFaturamento').val());
+            $('#cidadeEntrega').val($('#cidadeFaturamento').val());
+            $('#ufEntrega').val($('#ufFaturamento').val());
         }
     });
 </script>

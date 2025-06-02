@@ -22,7 +22,7 @@
             <div th:if="${errorMessage}" class="alert alert-danger">
                 <p th:text="${errorMessage}"></p>
             </div>
-            <form th:action="@{/perform_login}" method="post">
+            <form th:action="@{/admin/login}" method="post">
                 <input type="hidden" name="tipo" value="admin" />
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 

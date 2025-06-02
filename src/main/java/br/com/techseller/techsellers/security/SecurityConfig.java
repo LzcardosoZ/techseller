@@ -4,6 +4,7 @@ import br.com.techseller.techsellers.service.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -22,9 +23,6 @@ public class SecurityConfig {
     @Autowired
     private CustomSuccessHandler customSuccessHandler;
 
-    /**
-     * Define explicitamente que o UserDetailsService usado será o CustomUserDetailsService
-     */
     @Bean
     public UserDetailsService userDetailsService(CustomUserDetailsService customUserDetailsService) {
         return customUserDetailsService;
@@ -39,22 +37,40 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    @Order(1)
+    public SecurityFilterChain adminSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .securityMatcher("/admin/**")
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().hasAnyRole("ADMIN", "ESTOQUISTA")
+                )
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .loginProcessingUrl("/admin/login")
+                        .defaultSuccessUrl("/home", true)
+                        .failureUrl("/login?error")
+                        .permitAll()
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/admin/logout")
+                        .logoutSuccessUrl("/login?logout")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
+                );
+
+        return http.build();
+    }
+
+    @Bean
+    @Order(2)
+    public SecurityFilterChain clientSecurityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers(
-                                "/login",
-                                "/login_cliente",
-                                "/clientes/cadastro",
-                                "/clientes/cadastrar"
-                        ).permitAll()
-                        .requestMatchers("/produtos/editar/**").hasAnyRole("ADMIN", "ESTOQUISTA")
-                        .requestMatchers("/gerenciar-produtos").hasAnyRole("ADMIN", "ESTOQUISTA")
+                        .requestMatchers("/login", "/login_cliente", "/clientes/cadastro", "/clientes/cadastrar").permitAll()
+                        .requestMatchers("/produtos/editar/**", "/gerenciar-produtos").hasAnyRole("ADMIN", "ESTOQUISTA")
                         .requestMatchers(HttpMethod.GET, "/menu", "/listarUsuarios", "/usuarios/**", "/home").authenticated()
-                        .requestMatchers("/", "/loja/**", "/carrinho", "/carrinho/adicionar", "/carrinho/remover",
-                                "/carrinho/atualizar", "/carrinho/frete", "/css/**", "/js/**", "/img/**").permitAll()
-                        .requestMatchers("/carrinho/finalizar").authenticated()
+                        .requestMatchers("/", "/loja/**", "/carrinho/**", "/css/**", "/js/**", "/img/**", "/produtos/imagem/**").permitAll()
                         .requestMatchers("/pedido/sucesso").permitAll()
                         .anyRequest().authenticated()
                 )
@@ -78,11 +94,12 @@ public class SecurityConfig {
                         .logoutSuccessUrl("/login_cliente?logout")
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
-                        .permitAll()
                 );
 
         return http.build();
     }
+
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {

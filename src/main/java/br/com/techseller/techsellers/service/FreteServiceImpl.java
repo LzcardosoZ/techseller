@@ -2,9 +2,6 @@ package br.com.techseller.techsellers.service;
 
 import br.com.techseller.techsellers.dto.EnderecoViaCepDTO;
 import br.com.techseller.techsellers.entity.Endereco;
-import br.com.techseller.techsellers.utils.Coordenadas;
-import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -40,12 +37,6 @@ public class FreteServiceImpl implements FreteService {
         return endereco;
     }
 
-
-    public BigDecimal calcularFretePorCep(String cep) {
-        Endereco endereco = obterEnderecoPorCep(cep);
-        return calcularFretePorUF(endereco.getUf());
-    }
-
     private EnderecoViaCepDTO buscarEnderecoViaCep(String cep) {
         try {
             String url = "https://viacep.com.br/ws/" + cep + "/json/";
@@ -55,7 +46,5 @@ public class FreteServiceImpl implements FreteService {
             throw new RuntimeException("Erro ao consultar o CEP: " + cep, e);
         }
     }
-
-
 
 }

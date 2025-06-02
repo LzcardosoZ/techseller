@@ -52,10 +52,10 @@
     </a>
     <div class="d-flex align-items-center gap-3">
       <div class="dropdown" th:if="${usuarioLogado != null}">
-        <a class="btn btn-outline-light dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown">
+        <a class="btn btn-outline-light dropdown-toggle" href="#" role="button" id="dropdownMenuLinkLogado" data-bs-toggle="dropdown">
           Olá, <span th:text="${usuarioLogado.username.contains('@') ? usuarioLogado.username.substring(0, usuarioLogado.username.indexOf('@')) : usuarioLogado.username}"></span>
         </a>
-        <ul class="dropdown-menu">
+        <ul class="dropdown-menu" aria-labelledby="dropdownMenuLinkLogado">
           <li><a class="dropdown-item" th:href="@{/clientes/conta}"><i class="bi bi-person-lines-fill"></i> Minha Conta</a></li>
           <li><a class="dropdown-item" th:href="@{/meus-pedidos}"><i class="bi bi-card-list"></i> Meus Pedidos</a></li>
           <li><a class="dropdown-item" th:href="@{/loja}"><i class="bi bi-house"></i> Home</a></li>
@@ -70,7 +70,7 @@
         </ul>
       </div>
       <div class="dropdown" th:if="${usuarioLogado == null}">
-        <a class="btn btn-outline-light dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown">
+        <a class="btn btn-outline-light dropdown-toggle" href="#" role="button" id="dropdownMenuLinkNaoLogado" data-bs-toggle="dropdown">
           Minha Conta
         </a>
         <ul class="dropdown-menu">
@@ -94,7 +94,7 @@
   <div class="card mb-4">
     <div class="card-body">
       <h4 class="section-title">Informações Pessoais</h4><a class="btn btn-sm btn-outline-secondary float-end" href="#" title="Editar dados">✎</a>
-      <form method="post" th:action="@{/conta/atualizarInfo}" th:object="${cliente}">
+      <form method="post" th:action="@{/clientes/conta/atualizarInfo}" th:object="${cliente}">
         <!-- Campo de Nome -->
         <div class="mb-3">
           <label class="form-label" for="nome">Nome:</label>
@@ -103,7 +103,7 @@
         <!-- Data de Nascimento -->
         <div class="mb-3">
           <label class="form-label" for="dataNascimento">Data de Nascimento:</label>
-          <input class="form-control" id="dataNascimento" required="" th:field="*{dataNascimento}" type="date"/>
+          <input type="date" id="dataNascimento" class="form-control" th:field="*{dataNascimento}" required />
         </div>
         <!-- Gênero -->
         <div class="mb-3">
@@ -123,6 +123,10 @@
   <div class="card mb-4">
     <div class="card-body">
       <h4 class="section-title">Alteração de Senha</h4>
+
+      <div th:if="${sucessoSenha}" class="alert alert-success" th:text="${sucessoSenha}"></div>
+      <div th:if="${erroSenha}" class="alert alert-danger" th:text="${erroSenha}"></div>
+
       <form method="post" th:action="@{/clientes/conta/alterarSenha}">
         <div class="mb-3">
           <label class="form-label" for="senhaAtual">Senha Atual:</label>
@@ -158,113 +162,99 @@
       </div>
 
       <!-- Lista os endereços já cadastrados -->
-      <div th:if="${cliente.enderecos != null and #lists.size(cliente.enderecos.?[!padrao]) > 0}">
-      </div>
-      <!-- Lista os endereços já cadastrados -->
-      <div th:if="${cliente.enderecos != null and #lists.size(cliente.enderecos.?[!padrao]) > 0}">
+      <div th:if="${cliente.enderecos != null and #lists.size(cliente.enderecos.?[tipo.name() == 'ENTREGA']) > 0}"></div>
       <div class="address-card mb-3" th:each="endereco, iterStat : ${cliente.enderecosEntrega}">
-          <form method="post" th:action="@{/clientes/conta/editarEndereco/{index}(index=${iterStat.index})}">
-            <div class="row">
-              <div class="col-md-10">
-                <div class="mb-2">
-                  <label class="form-label">CEP</label>
-                  <input class="form-control" name="cep" required="" th:value="${endereco.cep}" type="text" readonly disabled />
+        <form method="post" th:action="@{/clientes/conta/editarEndereco/{index}(index=${iterStat.index})}">
+          <div class="row">
+            <div class="col-md-10">
+              <div class="mb-2">
+                <label class="form-label">CEP</label>
+                <input class="form-control" name="cep" required="" th:value="${endereco.cep}" type="text" readonly disabled />
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Logradouro</label>
+                <input class="form-control" name="logradouro" required="" th:value="${endereco.logradouro}" type="text" readonly disabled/>
+              </div>
+              <div class="row g-2 mb-2">
+                <div class="col-md-4">
+                  <label class="form-label">Número</label>
+                  <input class="form-control" name="numero" required="" th:value="${endereco.numero}" type="text" readonly disabled/>
                 </div>
-                <div class="mb-2">
-                  <label class="form-label">Logradouro</label>
-                  <input class="form-control" name="logradouro" required="" th:value="${endereco.logradouro}" type="text" readonly disabled/>
+                <div class="col-md-4">
+                  <label class="form-label">Complemento</label>
+                  <input class="form-control" name="complemento" th:value="${endereco.complemento}" type="text" readonly disabled/>
                 </div>
-                <div class="row g-2 mb-2">
-                  <div class="col-md-4">
-                    <label class="form-label">Número</label>
-                    <input class="form-control" name="numero" required="" th:value="${endereco.numero}" type="text" readonly disabled/>
-                  </div>
-                  <div class="col-md-4">
-                    <label class="form-label">Complemento</label>
-                    <input class="form-control" name="complemento" th:value="${endereco.complemento}" type="text" readonly disabled/>
-                  </div>
-                  <div class="col-md-4">
-                    <label class="form-label">Bairro</label>
-                    <input class="form-control" name="bairro" required="" th:value="${endereco.bairro}" type="text" readonly disabled/>
-                  </div>
+                <div class="col-md-4">
+                  <label class="form-label">Bairro</label>
+                  <input class="form-control" name="bairro" required="" th:value="${endereco.bairro}" type="text" readonly disabled/>
                 </div>
-                <div class="row g-2">
-                  <div class="col-md-6">
-                    <label class="form-label">Cidade</label>
-                    <input class="form-control" name="cidade" required="" th:value="${endereco.cidade}" type="text" readonly disabled/>
-                  </div>
-                  <div class="col-md-6">
-                    <label class="form-label">UF</label>
-                    <input class="form-control" maxlength="2" name="uf" required="" th:value="${endereco.uf}" type="text" readonly disabled/>
-                  </div>
+              </div>
+              <div class="row g-2">
+                <div class="col-md-6">
+                  <label class="form-label">Cidade</label>
+                  <input class="form-control" name="cidade" required="" th:value="${endereco.cidade}" type="text" readonly disabled/>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">UF</label>
+                  <input class="form-control" maxlength="2" name="uf" required="" th:value="${endereco.uf}" type="text" readonly disabled/>
                 </div>
               </div>
             </div>
-          </form>
+          </div>
+        </form>
 
-          <form class="mt-2 w-100" method="post" th:action="@{/clientes/conta/setarEnderecoPadrao/{index}(index=${iterStat.index})}">
-            <button class="btn btn-outline-info w-100" th:if="${endereco.padrao != true}" type="submit">
-              <i class="bi bi-star"></i> Definir como Padrão
-            </button>
-            <span class="badge bg-success mt-2 w-100" th:if="${endereco.padrao}">Endereço Padrão</span>
-          </form>
-        </div>
+        <form class="mt-2 w-100" method="post" th:action="@{/clientes/conta/setarEnderecoPadrao/{index}(index=${iterStat.index})}">
+          <button class="btn btn-outline-info w-100" th:if="${endereco.tipo.name() != 'FATURAMENTO'}" type="submit">
+            <i class="bi bi-star"></i> Definir como Padrão
+          </button>
+          <span class="badge bg-success mt-2 w-100" th:if="${endereco.tipo.name() == 'PADRAO'}">Endereço Padrão</span>
+        </form>
       </div>
       <!-- Se nenhum endereço estiver cadastrado -->
       <div class="alert alert-info" th:if="${cliente.enderecosEntrega == null or #lists.isEmpty(cliente.enderecosEntrega)}">
         Você ainda não possui endereços cadastrados.
       </div>
-      <!-- Se nenhum endereço estiver cadastrado -->
-      <div class="alert alert-info" th:if="${cliente.enderecosEntrega == null or #lists.isEmpty(cliente.enderecosEntrega)}">
-        Você ainda não possui endereços cadastrados.
-      </div>
-      <!-- Formulário para adicionar um novo endereço -->
-      <div class="mt-4">
-        <!-- Formulário para adicionar um novo endereço -->
-        <div class="mt-4">
-          <h5>Adicionar Novo Endereço</h5>
-          <form method="post" th:action="@{/clientes/conta/adicionarEndereco}">
-            <div class="row g-3">
-              <div class="col-md-3">
-                <label class="form-label">CEP:</label>
-                <input class="form-control" id="cep" name="cep" placeholder="00000-000" required="" type="text"/>
-                <button class="btn btn-outline-secondary mt-2 w-100" onclick="buscarEndereco()" type="button">Buscar CEP</button>
-              </div>
-              <div class="col-md-5">
-                <label class="form-label">Logradouro:</label>
-                <input class="form-control" id="logradouro" name="logradouro" required="" type="text"/>
-              </div>
-              <div class="col-md-2">
-                <label class="form-label">Número:</label>
-                <input class="form-control" id="numero" name="numero" required="" type="text"/>
-              </div>
-              <div class="col-md-2">
-                <label class="form-label">Complemento:</label>
-                <input class="form-control" id="complemento" name="complemento" type="text"/>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">Bairro:</label>
-                <input class="form-control" id="bairro" name="bairro" required="" type="text"/>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">Cidade:</label>
-                <input class="form-control" id="cidade" name="cidade" required="" type="text"/>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">UF:</label>
-                <input class="form-control" id="uf" maxlength="2" name="uf" required="" type="text"/>
-              </div>
-            </div>
-            <button class="btn btn-success mt-3" type="submit">Adicionar Endereço</button>
-          </form>
+      <!-- Formulário para adicionar novo endereço -->
+      <hr class="my-4">
+      <h4 class="section-title">Adicionar Novo Endereço</h4>
+      <form method="post" th:action="@{/clientes/conta/adicionarEndereco}">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">CEP:</label>
+            <input class="form-control" id="cep" name="cep" placeholder="00000-000" required type="text"/>
+            <button class="btn btn-outline-secondary mt-2 w-100" onclick="buscarEndereco()" type="button">Buscar CEP</button>
+          </div>
+          <div class="col-md-5">
+            <label class="form-label">Logradouro:</label>
+            <input class="form-control" id="logradouro" name="logradouro" required type="text"/>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Número:</label>
+            <input class="form-control" id="numero" name="numero" required type="text"/>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Complemento:</label>
+            <input class="form-control" id="complemento" name="complemento" type="text"/>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Bairro:</label>
+            <input class="form-control" id="bairro" name="bairro" required type="text"/>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Cidade:</label>
+            <input class="form-control" id="cidade" name="cidade" required type="text"/>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">UF:</label>
+            <input class="form-control" id="uf" maxlength="2" name="uf" required type="text"/>
+          </div>
         </div>
-        <form method="post" th:action="@{/conta/adicionarEndereco}">
+        <button class="btn btn-success mt-3" type="submit">Adicionar Endereço</button>
+      </form>
+
     </div>
   </div>
-</div>
-
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Bootstrap JS -->
 
   <footer style="background-color: #2a2a2a; padding: 20px 0; font-family: Arial, sans-serif; color: white;">
     <table width="100%" border="0" cellspacing="0" cellpadding="15" style="max-width: 1200px; margin: 0 auto; border-collapse: collapse;">
@@ -278,21 +268,21 @@
         <td width="33%" style="vertical-align: top; border-right: 1px solid #444; padding: 0 20px; text-align: center;">
           <div style="font-weight: bold; margin-bottom: 8px; font-size: 18px;">Links Úteis</div>
           <div style="color: #ccc; font-size: 14px; line-height: 1.8;">
-            <a href="contato.html" style="color: #ccc; text-decoration: none; display: block;">Contato</a>
-            <a href="politica-privacidade.html" style="color: #ccc; text-decoration: none; display: block;">Política de Privacidade</a>
-            <a href="termos-uso.html" style="color: #ccc; text-decoration: none; display: block;">Termos de Uso</a>
+            <div><a th:href="@{/contato}">Contato</a></div>
+            <div><a th:href="@{/politica-privacidade}">Política de Privacidade</a></div>
+            <div><a th:href="@{/termos-uso}">Termos de Uso</a></div>
           </div>
         </td>
         <td width="33%" style="vertical-align: top; padding-left: 20px;">
           <div style="font-weight: bold; margin-bottom: 8px; font-size: 18px;">Redes Sociais</div>
           <div style="color: #ccc; font-size: 24px;">
-            <a href="https://facebook.com/sualoja" target="_blank" style="color: #ccc; text-decoration: none; margin-right: 15px;">
+            <a href="https://www.facebook.com/senacsaopaulo" target="_blank" style="color: #ccc; text-decoration: none; margin-right: 15px;">
               <i class="bi bi-facebook"></i>
             </a>
-            <a href="https://twitter.com/sualoja" target="_blank" style="color: #ccc; text-decoration: none; margin-right: 15px;">
+            <a href="https://x.com/senacsaopaulo" target="_blank" style="color: #ccc; text-decoration: none; margin-right: 15px;">
               <i class="bi bi-twitter"></i>
             </a>
-            <a href="https://instagram.com/sualoja" target="_blank" style="color: #ccc; text-decoration: none;">
+            <a href="https://www.instagram.com/senacsaopaulo/" target="_blank" style="color: #ccc; text-decoration: none;">
               <i class="bi bi-instagram"></i>
             </a>
           </div>
@@ -301,75 +291,77 @@
     </table>
   </footer>
 
-<script>
-  function buscarEndereco() {
-    const cepInput = document.getElementById('cep');
-    const cep = cepInput.value.replace(/\D/g, '');
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    if (cep.length !== 8) {
-      alert('CEP inválido. Use o formato 00000-000.');
-      return;
+  <script>
+    function buscarEndereco() {
+      const cepInput = document.getElementById('cep');
+      const cep = cepInput.value.replace(/\D/g, '');
+
+      if (cep.length !== 8) {
+        alert('CEP inválido. Use o formato 00000-000.');
+        return;
+      }
+
+      fetch(`https://viacep.com.br/ws/${cep}/json/`)
+              .then(response => {
+                if (!response.ok) throw new Error('Erro na consulta do CEP');
+                return response.json();
+              })
+              .then(data => {
+                if (data.erro) {
+                  alert('CEP não encontrado.');
+                  return;
+                }
+
+                document.getElementById('logradouro').value = data.logradouro || '';
+                document.getElementById('complemento').value = data.complemento || '';
+                document.getElementById('bairro').value = data.bairro || '';
+                document.getElementById('cidade').value = data.localidade || '';
+                document.getElementById('uf').value = data.uf || '';
+              })
+              .catch(error => {
+                console.error('Erro ao buscar CEP:', error);
+                alert('Erro ao buscar CEP. Tente novamente.');
+              });
     }
-
-    fetch(`https://viacep.com.br/ws/${cep}/json/`)
-            .then(response => {
-              if (!response.ok) throw new Error('Erro na consulta do CEP');
-              return response.json();
-            })
-            .then(data => {
-              if (data.erro) {
-                alert('CEP não encontrado.');
-                return;
-              }
-
-              document.getElementById('logradouro').value = data.logradouro || '';
-              document.getElementById('complemento').value = data.complemento || '';
-              document.getElementById('bairro').value = data.bairro || '';
-              document.getElementById('cidade').value = data.localidade || '';
-              document.getElementById('uf').value = data.uf || '';
-            })
-            .catch(error => {
-              console.error('Erro ao buscar CEP:', error);
-              alert('Erro ao buscar CEP. Tente novamente.');
-            });
-  }
-</script>
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    // Ativa edição de informações pessoais
-    const editInfoBtn = document.querySelector('[title="Editar dados"]');
-    if (editInfoBtn) {
-      editInfoBtn.addEventListener("click", function (e) {
-        e.preventDefault();
-        document.querySelectorAll('form[action$="atualizarInfo"] input').forEach(input => {
-          input.removeAttribute('readonly');
+  </script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Ativa edição de informações pessoais
+      const editInfoBtn = document.querySelector('[title="Editar dados"]');
+      if (editInfoBtn) {
+        editInfoBtn.addEventListener("click", function (e) {
+          e.preventDefault();
+          document.querySelectorAll('form[action$="atualizarInfo"] input').forEach(input => {
+            input.removeAttribute('readonly');
+          });
+          const select = document.querySelector('form[action$="atualizarInfo"] select');
+          if (select) select.removeAttribute('disabled');
         });
-        const select = document.querySelector('form[action$="atualizarInfo"] select');
-        if (select) select.removeAttribute('disabled');
-      });
-    }
+      }
 
-    // Ativa edição de endereços
-    const editEnderecoBtns = document.querySelectorAll('.address-card [title="Editar endereço"]');
-    editEnderecoBtns.forEach((btn, index) => {
-      btn.addEventListener("click", function (e) {
-        e.preventDefault();
-        const container = btn.closest(".address-card");
-        container.querySelectorAll("span").forEach(span => {
-          const fieldName = span.getAttribute("th:text")?.split("}")[0]?.split(".").pop();
-          if (fieldName) {
-            const input = document.createElement("input");
-            input.type = "text";
-            input.className = "form-control form-control-sm mb-2";
-            input.name = fieldName;
-            input.value = span.textContent.trim();
-            span.replaceWith(input);
-          }
+      // Ativa edição de endereços
+      const editEnderecoBtns = document.querySelectorAll('.address-card [title="Editar endereço"]');
+      editEnderecoBtns.forEach((btn, index) => {
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+          const container = btn.closest(".address-card");
+          container.querySelectorAll("span").forEach(span => {
+            const fieldName = span.getAttribute("th:text")?.split("}")[0]?.split(".").pop();
+            if (fieldName) {
+              const input = document.createElement("input");
+              input.type = "text";
+              input.className = "form-control form-control-sm mb-2";
+              input.name = fieldName;
+              input.value = span.textContent.trim();
+              span.replaceWith(input);
+            }
+          });
         });
       });
     });
-  });
-</script><script>
+  </script><script>
   function buscarEnderecoExistente(button) {
     const container = button.closest("form");
     const cepInput = container.querySelector('input[name="cep"]');

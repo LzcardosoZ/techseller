@@ -2,6 +2,7 @@ package br.com.techseller.techsellers.controller;
 
 import br.com.techseller.techsellers.entity.Cliente;
 import br.com.techseller.techsellers.entity.Endereco;
+import br.com.techseller.techsellers.enums.TipoEndereco;
 import br.com.techseller.techsellers.service.ClienteService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 
 import java.util.*;
@@ -28,21 +30,17 @@ public class ClienteController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    // ===== CADASTRO DE NOVO CLIENTE =====
     @GetMapping("/cadastro")
     public String mostrarFormCadastro(@RequestParam(name = "from", defaultValue = "loja") String from,
                                       Model model) {
         Cliente cliente = new Cliente();
 
-        // Endereço de faturamento (padrao = true)
         Endereco faturamento = new Endereco();
-        faturamento.setPadrao(true);
+        faturamento.setTipo(TipoEndereco.FATURAMENTO);
 
-        // Endereço de entrega (padrao = false)
         Endereco entrega = new Endereco();
-        entrega.setPadrao(false);
+        entrega.setTipo(TipoEndereco.ENTREGA);
 
-        // Define os dois endereços na lista única
         cliente.setEnderecos(List.of(faturamento, entrega));
 
         model.addAttribute("cliente", cliente);
@@ -52,8 +50,6 @@ public class ClienteController {
         return "cadastroCliente";
     }
 
-
-
     @PostMapping("/cadastrar")
     public String cadastrarCliente(@Valid @ModelAttribute Cliente cliente,
                                    BindingResult result,
@@ -61,75 +57,67 @@ public class ClienteController {
                                    @RequestParam(name = "from", defaultValue = "loja") String from,
                                    Model model) {
 
-        log.info("📥 Requisição recebida para cadastro de cliente: {}", cliente.getEmail());
+        log.info("Requisição recebida para cadastro de cliente: {}", cliente.getEmail());
 
         model.addAttribute("generos", Arrays.asList("Masculino", "Feminino", "Outro"));
 
         if (result.hasErrors()) {
-            log.warn("❌ Erros de validação no formulário: {}", result.getAllErrors());
+            log.warn("Erros de validação no formulário: {}", result.getAllErrors());
 
-            preencherEnderecosMinimos(cliente);
             model.addAttribute("cliente", cliente);
             return "cadastroCliente";
         }
 
+        // Verifica se as senhas coincidem
         if (!cliente.getSenha().equals(confirmarSenha)) {
-            log.warn("❌ Senhas não coincidem para: {}", cliente.getEmail());
+            log.warn("Senhas não coincidem para: {}", cliente.getEmail());
             model.addAttribute("erroSenha", "As senhas não coincidem.");
 
-            preencherEnderecosMinimos(cliente);
             model.addAttribute("cliente", cliente);
             return "cadastroCliente";
         }
 
         try {
             if (clienteService.emailJaCadastrado(cliente.getEmail())) {
-                log.warn("⚠️ E-mail já cadastrado: {}", cliente.getEmail());
+                log.warn("E-mail já cadastrado: {}", cliente.getEmail());
                 model.addAttribute("erroEmail", "Este e-mail já está em uso");
 
-                preencherEnderecosMinimos(cliente);
                 model.addAttribute("cliente", cliente);
                 return "cadastroCliente";
             }
 
-            clienteService.cadastrarCliente(cliente);
-            log.info("✅ Cadastro finalizado com sucesso: {}", cliente.getEmail());
+            cliente.getEnderecos().forEach(endereco -> endereco.setCliente(cliente));
 
-            // ✅ redireciona para login com parâmetro de sucesso
+            clienteService.cadastrarCliente(cliente);
+            log.info("Cadastro finalizado com sucesso: {}", cliente.getEmail());
+
             return "redirect:/login_cliente?cadastro=sucesso";
 
         } catch (IllegalArgumentException e) {
-            log.error("🚫 Erro ao cadastrar cliente: {}", e.getMessage());
+            log.error("Erro ao cadastrar cliente: {}", e.getMessage());
             model.addAttribute("erroCadastro", e.getMessage());
 
-            preencherEnderecosMinimos(cliente);
             model.addAttribute("cliente", cliente);
             return "cadastroCliente";
         }
     }
 
-
-
-
-
-    // ===== EXIBIR PÁGINA DE CONTA =====
     @GetMapping("/conta")
     public String mostrarConta(Model model, @AuthenticationPrincipal UserDetails userDetails) {
-        Optional<Cliente> clienteOpt = clienteService.buscarPorEmail(userDetails.getUsername());
+        Optional<Cliente> clienteOpt = clienteService.buscarPorEmailComEnderecos(userDetails.getUsername());
         if (clienteOpt.isPresent()) {
             Cliente cliente = clienteOpt.get();
 
             model.addAttribute("cliente", cliente);
-            model.addAttribute("enderecos", cliente.getEnderecosEntrega());       // os não-padrão
-            model.addAttribute("enderecoPadrao", cliente.getEnderecoPadrao());   // o atual padrão (visual)
+            model.addAttribute("enderecoPadrao", cliente.getEnderecoPadrao());
 
-            return "conta"; // seu template HTML
+            return "conta";
         }
         return "redirect:/login_cliente";
     }
 
 
-    // ===== ATUALIZAR DADOS PESSOAIS =====
+
     @PostMapping("/conta/atualizarInfo")
     public String atualizarInfoPessoal(@ModelAttribute Cliente clienteAtualizado,
                                        @AuthenticationPrincipal UserDetails userDetails,
@@ -149,13 +137,14 @@ public class ClienteController {
         return "redirect:/clientes/conta";
     }
 
-    // ===== ALTERAR SENHA =====
     @PostMapping("/conta/alterarSenha")
     public String alterarSenha(@RequestParam String senhaAtual,
                                @RequestParam String novaSenha,
                                @RequestParam String confirmarSenha,
                                @AuthenticationPrincipal UserDetails userDetails,
-                               Model model) {
+                               Model model,
+                               RedirectAttributes redirectAttributes) {
+
         Optional<Cliente> clienteOpt = clienteService.buscarPorEmail(userDetails.getUsername());
 
         if (clienteOpt.isPresent()) {
@@ -174,18 +163,19 @@ public class ClienteController {
             }
 
             clienteService.alterarSenha(cliente, novaSenha);
+            redirectAttributes.addFlashAttribute("sucessoSenha", "Senha alterada com sucesso!");
         }
 
         return "redirect:/clientes/conta";
     }
 
-    // ===== ADICIONAR NOVO ENDEREÇO =====
+
     @PostMapping("/conta/adicionarEndereco")
     public String adicionarEndereco(@RequestParam Map<String, String> enderecoParams,
                                     @RequestParam(name = "from", defaultValue = "conta") String from,
                                     @AuthenticationPrincipal UserDetails userDetails) {
 
-        Optional<Cliente> clienteOpt = clienteService.buscarPorEmail(userDetails.getUsername());
+        Optional<Cliente> clienteOpt = clienteService.buscarPorEmailComEnderecos(userDetails.getUsername());
         if (clienteOpt.isPresent()) {
             Cliente cliente = clienteOpt.get();
 
@@ -198,11 +188,10 @@ public class ClienteController {
             novoEndereco.setCidade(enderecoParams.get("cidade"));
             novoEndereco.setUf(enderecoParams.get("uf"));
 
-            novoEndereco.setPadrao(false);
+            novoEndereco.setTipo(TipoEndereco.ENTREGA);
             novoEndereco.setCliente(cliente);
 
             cliente.getEnderecos().add(novoEndereco);
-
             clienteService.atualizarCliente(cliente);
         }
 
@@ -215,14 +204,12 @@ public class ClienteController {
                                       @RequestParam Map<String, String> form,
                                       @AuthenticationPrincipal UserDetails userDetails) {
 
-        Optional<Cliente> clienteOpt = clienteService.buscarPorEmail(userDetails.getUsername());
-
+        Optional<Cliente> clienteOpt = clienteService.buscarPorEmailComEnderecos(userDetails.getUsername());
         if (clienteOpt.isPresent()) {
             Cliente cliente = clienteOpt.get();
 
-            // Filtra apenas os endereços de entrega (padrao = false)
             List<Endereco> entregas = cliente.getEnderecos().stream()
-                    .filter(e -> !Boolean.TRUE.equals(e.getPadrao()))
+                    .filter(e -> TipoEndereco.ENTREGA.equals(e.getTipo()))
                     .toList();
 
             if (index >= 0 && index < entregas.size()) {
@@ -246,26 +233,32 @@ public class ClienteController {
     @PostMapping("/conta/setarEnderecoPadrao/{index}")
     public String setarEnderecoPadrao(@PathVariable int index,
                                       @AuthenticationPrincipal UserDetails userDetails) {
-        Optional<Cliente> clienteOpt = clienteService.buscarPorEmail(userDetails.getUsername());
-
+        Optional<Cliente> clienteOpt = clienteService.buscarPorEmailComEnderecos(userDetails.getUsername());
         if (clienteOpt.isPresent()) {
             Cliente cliente = clienteOpt.get();
 
             List<Endereco> entregas = cliente.getEnderecos().stream()
-                    .filter(e -> !Boolean.TRUE.equals(e.getPadrao()))
+                    .filter(e -> TipoEndereco.ENTREGA.equals(e.getTipo()))
                     .toList();
 
             if (index >= 0 && index < entregas.size()) {
-                for (Endereco e : entregas) {
-                    e.setPadrao(false);
-                }
-                entregas.get(index).setPadrao(true);
+
+                cliente.getEnderecos().forEach(e -> {
+                    if (TipoEndereco.FATURAMENTO.equals(e.getTipo())) {
+                        e.setTipo(TipoEndereco.ENTREGA);
+                    }
+                });
+
+                // Define o selecionado como FATURAMENTO
+                entregas.get(index).setTipo(TipoEndereco.FATURAMENTO);
+
                 clienteService.atualizarCliente(cliente);
             }
         }
 
         return "redirect:/clientes/conta";
     }
+
 
     private void preencherEnderecosMinimos(Cliente cliente) {
         if (cliente.getEnderecos() == null) {
@@ -274,10 +267,16 @@ public class ClienteController {
 
         while (cliente.getEnderecos().size() < 2) {
             Endereco novo = new Endereco();
-            novo.setPadrao(cliente.getEnderecos().isEmpty()); // o primeiro é faturamento
+
+            if (cliente.getEnderecos().isEmpty()) {
+                novo.setTipo(TipoEndereco.FATURAMENTO);
+            } else {
+                novo.setTipo(TipoEndereco.ENTREGA);
+            }
+
             cliente.getEnderecos().add(novo);
         }
     }
 
-
 }
+

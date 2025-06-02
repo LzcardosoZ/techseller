@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Política de Privacidade - TechSeller</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .navbar-techseller {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+        }
+        .content-container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-techseller">
+    <div class="container">
+        <!-- Logo -->
+        <a class="navbar-brand" href="/">
+            <span class="fs-4 fw-bold text-white">TechSeller</span>
+        </a>
+        <!-- Controles do Usuário -->
+        <div class="d-flex align-items-center">
+            <div class="dropdown me-3" th:if="${usuarioLogado != null}">
+                <a class="btn btn-outline-light dropdown-toggle" href="#" role="button" id="dropdownMenuLinkLogado" data-bs-toggle="dropdown">
+                    Olá, <span th:text="${usuarioLogado.username.contains('@') ? usuarioLogado.username.substring(0, usuarioLogado.username.indexOf('@')) : usuarioLogado.username}"></span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item" th:href="@{/clientes/conta}">
+                            <i class="bi bi-person-lines-fill"></i> Minha Conta
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" th:href="@{/meus-pedidos}">
+                            <i class="bi bi-card-list"></i> Meus Pedidos
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" th:href="@{/loja}">
+                            <i class="bi bi-house"></i> Home
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <form id="logoutForm" th:action="@{/logout}" method="post" style="display: inline;">
+                            <button type="button" class="dropdown-item" style="border: none; background: none; padding: 0;" onclick="logoutWithToast()">
+                                <i class="bi bi-box-arrow-right"></i> Sair
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+
+            </div>
+            <div class="dropdown me-3" th:if="${usuarioLogado == null}">
+                <a class="btn btn-outline-light dropdown-toggle" href="#" role="button" id="dropdownMenuLinkNaoLogado" data-bs-toggle="dropdown">
+                    Minha Conta
+                </a>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item" th:href="@{/login_cliente}">
+                            <i class="bi bi-box-arrow-in-right"></i> Login
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" th:href="@{/clientes/cadastro}">
+                            <i class="bi bi-person-plus"></i> Criar Conta
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <a href="/carrinho" class="btn btn-light position-relative">
+                <i class="bi bi-cart3"></i>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartBadge">
+                    <span th:text="${carrinho != null ? carrinho.totalItens : 0}"></span>
+                    <span class="visually-hidden">itens no carrinho</span>
+                </span>
+            </a>
+        </div>
+    </div>
+</nav>
+
+<!-- Conteúdo -->
+<div class="container">
+    <div class="content-container">
+        <h2 class="mb-4">Política de Privacidade</h2>
+
+        <p>A TechSeller valoriza a privacidade de seus usuários e tem o compromisso de proteger todas as informações pessoais fornecidas por você.</p>
+
+        <h5>1. Coleta de Informações</h5>
+        <p>Coletamos dados como nome, e-mail, endereço e informações de pagamento apenas quando fornecidos voluntariamente durante o uso da loja.</p>
+
+        <h5>2. Uso das Informações</h5>
+        <p>Usamos seus dados para processar pedidos, oferecer suporte, personalizar sua experiência e enviar atualizações e promoções (se autorizado).</p>
+
+        <h5>3. Compartilhamento de Dados</h5>
+        <p>Seus dados não são vendidos nem compartilhados com terceiros, exceto quando necessário para completar uma transação ou por exigência legal.</p>
+
+        <h5>4. Segurança</h5>
+        <p>Adotamos medidas de segurança físicas, eletrônicas e administrativas para proteger suas informações contra acessos não autorizados.</p>
+
+        <h5>5. Seus Direitos</h5>
+        <p>Você pode solicitar a visualização, correção ou exclusão dos seus dados pessoais entrando em contato conosco.</p>
+
+        <h5>6. Alterações</h5>
+        <p>Reservamo-nos o direito de atualizar esta política. Notificações serão feitas em caso de alterações significativas.</p>
+
+        <p class="mt-4">Última atualização: 01/06/2025</p>
+    </div>
+</div>
+
+<footer class="text-white py-3" style="background-color: #2c3e50;">
+    <div class="container text-center">
+        &copy; 2025 TechSeller. Todos os direitos reservados.
+    </div>
+</footer>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

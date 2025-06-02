@@ -2,6 +2,7 @@ package br.com.techseller.techsellers.service;
 
 import br.com.techseller.techsellers.entity.Cliente;
 import br.com.techseller.techsellers.entity.User;
+import br.com.techseller.techsellers.enums.Grupo;
 import br.com.techseller.techsellers.repository.ClienteRepository;
 import br.com.techseller.techsellers.repository.UserRepository;
 import org.springframework.security.core.GrantedAuthority;
@@ -26,13 +27,13 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        System.out.println("🔍 Tentando autenticar o e-mail: " + email);
+        System.out.println("Tentando autenticar o e-mail: " + email);
 
         Optional<User> userOpt = userRepository.findByEmail(email);
         Optional<Cliente> clienteOpt = clienteRepository.findByEmail(email);
 
         if (userOpt.isPresent() && clienteOpt.isPresent()) {
-            System.out.println("🚨 Conflito: e-mail duplicado em 'users' e 'clientes'.");
+            System.out.println("Conflito: e-mail duplicado em 'users' e 'clientes'.");
             throw new UsernameNotFoundException("Conflito de e-mail.");
         }
 
@@ -44,13 +45,16 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            System.out.println("🧑‍💼 Login como USER (Admin/Estoquista): " + user.getEmail());
-            return user;  // ⬅️ ESSENCIAL: permite usar auth.getPrincipal() como User
+            System.out.println("Login como USER (Admin/Estoquista): " + user.getEmail());
+
+            return user;
         }
 
-        System.out.println("❌ Nenhum usuário encontrado com o e-mail: " + email);
+        System.out.println("Nenhum usuário encontrado com o e-mail: " + email);
         throw new UsernameNotFoundException("Usuário não encontrado.");
     }
+
+
 
     private UserDetails createUserDetailsFromCliente(Cliente cliente) {
         List<GrantedAuthority> authorities = List.of(() -> "ROLE_CLIENTE");

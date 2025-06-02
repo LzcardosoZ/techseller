@@ -11,7 +11,7 @@ public class EnderecoViaCepDTO {
     private String bairro;
 
     @JsonProperty("localidade")
-    private String cidade; // agora será populado corretamente
+    private String cidade;
 
     private String uf;
 }

@@ -206,6 +206,9 @@
     </style>
 </head>
 <body>
+<meta name="_csrf" th:content="${_csrf.token}"/>
+<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
 <!-- Loading Inicial -->
 <div class="loading-overlay" id="loading">
     <div class="spinner-border text-primary" role="status">
@@ -473,7 +476,7 @@
                             </button>
                             <form th:action="@{/carrinho/adicionar}" method="post" class="d-inline">
                                 <input type="hidden" name="produtoId" th:value="${produto.produtoId}">
-                                <input type="hidden" name="quantidade" value="1">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                                 <button type="submit" class="btn btn-add-cart" th:disabled="${produto.quantidadeEstoque <= 0}">
                                     <i class="bi bi-cart-plus"></i> Add
                                 </button>
@@ -502,9 +505,9 @@
             <td width="33%" style="vertical-align: top; border-right: 1px solid #444; padding: 0 20px; text-align: center;">
                 <div style="font-weight: bold; margin-bottom: 8px; font-size: 18px;">Links Úteis</div>
                 <div style="color: #ccc; font-size: 14px; line-height: 1.8;">
-                    <a href="contato.html" style="color: #ccc; text-decoration: none; display: block;">Contato</a>
-                    <a href="politica-privacidade.html" style="color: #ccc; text-decoration: none; display: block;">Política de Privacidade</a>
-                    <a href="termos-uso.html" style="color: #ccc; text-decoration: none; display: block;">Termos de Uso</a>
+                  <div><a th:href="@{/contato}">Contato</a></div>
+                    <div><a th:href="@{/politica-privacidade}">Política de Privacidade</a></div>
+                    <div><a th:href="@{/termos-uso}">Termos de Uso</a></div>
                 </div>
             </td>
 
@@ -513,21 +516,21 @@
                 <div style="font-weight: bold; margin-bottom: 8px; font-size: 18px;">Redes Sociais</div>
                 <div style="color: #ccc; font-size: 24px;">
                     <!-- Ícone do Facebook -->
-                    <a href="https://facebook.com/sualoja" target="_blank" style="color: #ccc; text-decoration: none; margin-right: 15px;">
+                        <a href="https://www.facebook.com/senacsaopaulo" target="_blank" style="color: #ccc; text-decoration: none; margin-right: 15px;">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                             <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/>
                         </svg>
                     </a>
 
                     <!-- Ícone do Twitter/X -->
-                    <a href="https://twitter.com/sualoja" target="_blank" style="color: #ccc; text-decoration: none; margin-right: 15px;">
+                    <a href="https://x.com/senacsaopaulo" target="_blank" style="color: #ccc; text-decoration: none; margin-right: 15px;">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                             <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/>
                         </svg>
                     </a>
 
                     <!-- Ícone do Instagram -->
-                    <a href="https://instagram.com/sualoja" target="_blank" style="color: #ccc; text-decoration: none;">
+                    <a href="https://www.instagram.com/senacsaopaulo/" target="_blank" style="color: #ccc; text-decoration: none;">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/>
                         </svg>
@@ -542,36 +545,31 @@
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- CSRF tokens para uso com fetch -->
+<meta name="_csrf" th:content="${_csrf.token}" />
+<meta name="_csrf_header" th:content="${_csrf.headerName}" />
+
 <script>
     // Quando a janela carregar, esconda o overlay de carregamento
     window.addEventListener('load', () => {
         document.getElementById('loading').style.display = 'none';
     });
 
-    // Função para exibir o modal com os detalhes do produto
     function showProductModal(produtoId) {
-        // Exibe o overlay de carregamento
         document.getElementById('loading').style.display = 'flex';
 
         fetch(`/produtos/detalhes/${produtoId}`)
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Produto não encontrado');
-                }
+                if (!response.ok) throw new Error('Produto não encontrado');
                 return response.json();
             })
             .then(produto => {
-                console.log('Produto recebido:', produto);
-
-                // Atualiza os dados básicos do produto
                 document.getElementById('modalProdutoNome').textContent = produto.nome || 'Nome não disponível';
-                document.getElementById('modalProdutoPreco').textContent = 'R$ ' +
-                    (produto.preco ? produto.preco.toFixed(2).replace('.', ',') : '0,00');
-                document.getElementById('modalProdutoDescricao').textContent =
-                    produto.descricaoDetalhada || 'Descrição não disponível';
+                document.getElementById('modalProdutoPreco').textContent = 'R$ ' + (produto.preco ? produto.preco.toFixed(2).replace('.', ',') : '0,00');
+                document.getElementById('modalProdutoDescricao').textContent = produto.descricaoDetalhada || 'Descrição não disponível';
                 document.getElementById('modalProdutoId').value = produto.produtoId || produto.id || '';
 
-                // Atualiza o estoque
                 const estoqueElement = document.getElementById('modalProdutoEstoque');
                 if (produto.quantidadeEstoque > 0) {
                     estoqueElement.textContent = `Em estoque: ${produto.quantidadeEstoque}`;
@@ -581,37 +579,24 @@
                     estoqueElement.className = 'badge bg-danger';
                 }
 
-                // Atualiza a avaliação (estrelas)
                 const avaliacao = produto.avaliacao || 0;
                 const ratingText = document.getElementById('ratingText');
-
-                // Arredonda para a meia estrela mais próxima
                 const roundedRating = Math.round(avaliacao * 2) / 2;
+                ratingText.textContent = avaliacao > 0 ? `${roundedRating.toFixed(1)} (${produto.totalAvaliacoes || 0} avaliações)` : 'Sem avaliações';
 
-                // Atualiza o texto da avaliação
-                if (avaliacao > 0) {
-                    ratingText.textContent = `${roundedRating.toFixed(1)} (${produto.totalAvaliacoes || 0} avaliações)`;
-                } else {
-                    ratingText.textContent = 'Sem avaliações';
-                }
-
-                // Atualiza as estrelas
                 for (let i = 1; i <= 5; i++) {
                     const star = document.getElementById(`star${i}`);
+                    star.className = 'fas fa-star';
                     if (i <= roundedRating) {
                         star.classList.add('filled');
                     } else if (i - 0.5 <= roundedRating) {
-                        star.classList.add('filled');
-                        star.classList.add('fa-star-half-alt');
+                        star.classList.add('filled', 'fa-star-half-alt');
                         star.classList.remove('fa-star');
                     } else {
-                        star.classList.remove('filled');
-                        star.classList.add('fa-star');
-                        star.classList.remove('fa-star-half-alt');
+                        star.classList.remove('filled', 'fa-star-half-alt');
                     }
                 }
 
-                // Monta o carrossel de imagens
                 const carouselInner = document.getElementById('carouselInner');
                 const carouselIndicators = document.getElementById('carouselIndicators');
                 carouselInner.innerHTML = '';
@@ -619,7 +604,6 @@
 
                 if (produto.imagens && produto.imagens.length > 0) {
                     produto.imagens.forEach((imagem, index) => {
-                        // Cria o indicador
                         const indicator = document.createElement('button');
                         indicator.type = 'button';
                         indicator.setAttribute('data-bs-target', '#produtoCarousel');
@@ -631,27 +615,20 @@
                         }
                         carouselIndicators.appendChild(indicator);
 
-                        // Cria o item do carrossel
                         const carouselItem = document.createElement('div');
                         carouselItem.classList.add('carousel-item');
-                        if (index === 0) {
-                            carouselItem.classList.add('active');
-                        }
+                        if (index === 0) carouselItem.classList.add('active');
 
                         const img = document.createElement('img');
                         img.src = '/produtos/imagem/' + (imagem.id || imagem.imagemId || '');
                         img.classList.add('d-block', 'w-100');
                         img.alt = produto.nome + ' - Imagem ' + (index + 1);
-                        img.onerror = function() {
-                            this.onerror = null;
-                            this.src = '/img/sem-imagem.jpg';
-                        };
+                        img.onerror = () => { img.src = '/img/sem-imagem.jpg'; };
 
                         carouselItem.appendChild(img);
                         carouselInner.appendChild(carouselItem);
                     });
                 } else {
-                    // Caso não haja imagens, coloca uma única imagem padrão
                     const indicator = document.createElement('button');
                     indicator.type = 'button';
                     indicator.setAttribute('data-bs-target', '#produtoCarousel');
@@ -671,11 +648,7 @@
                     carouselInner.appendChild(carouselItem);
                 }
 
-                // Exibe o modal
-                const modal = new bootstrap.Modal(document.getElementById('produtoModal'));
-                modal.show();
-
-                // Oculta o overlay de carregamento
+                new bootstrap.Modal(document.getElementById('produtoModal')).show();
                 document.getElementById('loading').style.display = 'none';
             })
             .catch(error => {
@@ -685,44 +658,35 @@
             });
     }
 
-    // Eventos para controle de quantidade e envio do formulário de adicionar ao carrinho
     document.addEventListener('DOMContentLoaded', function() {
-        // Incrementa quantidade
+        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
         document.querySelectorAll('.increment-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const input = this.parentNode.querySelector('input');
                 const estoqueText = document.getElementById('modalProdutoEstoque').textContent;
                 const max = estoqueText.includes(':') ? parseInt(estoqueText.split(': ')[1]) || 999 : 999;
-                if (parseInt(input.value) < max) {
-                    input.value = parseInt(input.value) + 1;
-                }
+                if (parseInt(input.value) < max) input.value = parseInt(input.value) + 1;
             });
         });
 
-        // Decrementa quantidade
         document.querySelectorAll('.decrement-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const input = this.parentNode.querySelector('input');
-                if (parseInt(input.value) > 1) {
-                    input.value = parseInt(input.value) - 1;
-                }
+                if (parseInt(input.value) > 1) input.value = parseInt(input.value) - 1;
             });
         });
 
-        // Validação da quantidade
         document.querySelectorAll('#quantidadeInput').forEach(input => {
             input.addEventListener('change', function() {
                 const estoqueText = document.getElementById('modalProdutoEstoque').textContent;
                 const max = estoqueText.includes(':') ? parseInt(estoqueText.split(': ')[1]) || 999 : 999;
-                if (parseInt(this.value) < 1) {
-                    this.value = 1;
-                } else if (parseInt(this.value) > max) {
-                    this.value = max;
-                }
+                if (parseInt(this.value) < 1) this.value = 1;
+                else if (parseInt(this.value) > max) this.value = max;
             });
         });
 
-        // Envio do formulário de adicionar ao carrinho
         document.getElementById('addToCartForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
@@ -733,6 +697,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
+                    [csrfHeader]: csrfToken
                 },
                 body: `produtoId=${produtoId}&quantidade=${quantidade}`
             })
@@ -746,8 +711,7 @@
                 .then(data => {
                     if (data && data.success) {
                         updateCartCount();
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('produtoModal'));
-                        modal.hide();
+                        bootstrap.Modal.getInstance(document.getElementById('produtoModal')).hide();
                         alert('Produto adicionado ao carrinho com sucesso!');
                     }
                 })
@@ -757,14 +721,11 @@
                 });
         });
 
-        // Inicializa carrosseis dos produtos
         document.querySelectorAll('.product-carousel .carousel').forEach(carouselEl => {
             new bootstrap.Carousel(carouselEl, { interval: 6000 });
         });
-
     });
 
-    // Atualiza o contador do carrinho
     function updateCartCount() {
         fetch('/carrinho/totalItens')
             .then(response => response.json())
@@ -773,7 +734,6 @@
             });
     }
 
-    // Função para exibir o toast de logout e enviar o formulário de logout
     function logoutWithToast() {
         var toastEl = document.getElementById('logoutToast');
         var toast = new bootstrap.Toast(toastEl, { delay: 1500 });
@@ -783,5 +743,6 @@
         }, 1500);
     }
 </script>
+
 </body>
 </html>

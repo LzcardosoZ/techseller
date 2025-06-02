@@ -1,18 +1,13 @@
 package br.com.techseller.techsellers.service;
 
-
 import br.com.techseller.techsellers.entity.User;
 import br.com.techseller.techsellers.repository.UserRepository;
-import br.com.techseller.techsellers.utils.CpfValidator;
-import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import static br.com.techseller.techsellers.utils.CpfValidator.isValidCPF;
 
 import java.util.List;
 import java.util.Optional;
-
-import static br.com.techseller.techsellers.utils.CpfValidator.isValidCPF;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -24,7 +19,6 @@ public class UserServiceImpl implements UserService {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
-
 
     @Override
     public void registeruser(User user) {
@@ -85,6 +79,4 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(usuarioExistente);
     }
-
-    
 }

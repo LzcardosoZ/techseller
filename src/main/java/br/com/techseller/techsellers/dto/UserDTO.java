@@ -8,8 +8,6 @@ public class UserDTO {
     private boolean status;
     private String nomeGrupo;
 
-    public UserDTO() {}
-
     public UserDTO(Long id, String username, String email, String cpf, boolean status, String nomeGrupo) {
         this.id = id;
         this.username = username;
@@ -19,7 +17,7 @@ public class UserDTO {
         this.nomeGrupo = nomeGrupo;
     }
 
-    // Getters e Setters
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

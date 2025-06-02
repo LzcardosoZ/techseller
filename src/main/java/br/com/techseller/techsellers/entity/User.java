@@ -46,13 +46,18 @@ public class User implements UserDetails {
     @NotBlank(message = "A senha é obrigatória")
     private String password;
 
-
     @Column(name = "CONF_PASSWORD", nullable = false)
     private String confPassword;
 
     @Getter
     @Column(name = "STATUS", nullable = false)
     private boolean status = true; //usuario começa como ativo
+
+    @Transient
+    private String confNewPassword;
+
+    @Transient
+    private String newPassword;
 
 
     @Override
@@ -62,7 +67,7 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return username; // Mantém o e-mail como identificador do Spring Security
+        return email;
     }
 
     public String getNomeUsuario() {
@@ -109,13 +114,7 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return UserDetails.super.isEnabled();
+        return this.status;
     }
 
-
-    @Transient
-    private String newPassword;
-
-    @Transient
-    private String confNewPassword;
 }

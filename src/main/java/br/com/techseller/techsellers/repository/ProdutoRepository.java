@@ -23,11 +23,6 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
     List<Produto> findAllWithPrincipalImage();
 
     @Query("SELECT p FROM Produto p LEFT JOIN p.imagens i " +
-            "WHERE LOWER(p.nome) LIKE LOWER(concat('%', :nome, '%')) " +
-            "AND (i.imagemPrincipal = true OR i IS NULL)")
-    List<Produto> findByNomeContainingIgnoreCase(@Param("nome") String nome);
-
-    @Query("SELECT p FROM Produto p LEFT JOIN p.imagens i " +
             "WHERE (:filtro IS NULL OR " +
             "LOWER(p.nome) LIKE LOWER(concat('%', :filtro, '%')) OR " +
             "CAST(p.produtoId AS string) LIKE :filtro) " +
@@ -40,14 +35,9 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
             "ORDER BY i.ordem")
     Optional<Produto> findComImagensOrdenadas(@Param("id") Long id);
 
-    @Query("SELECT COUNT(i) FROM ImagemProduto i WHERE i.produto.produtoId = :produtoId")
-    int countImagensByProdutoId(@Param("produtoId") Long produtoId);
-
     @Modifying
     @Query("UPDATE ImagemProduto i SET i.ordem = :ordem WHERE i.id IN :ids")
     void atualizarOrdemImagens(@Param("ids") List<Long> ids, @Param("ordem") Integer ordem);
-
-    boolean existsByProdutoId(Long produtoId);
 
     @EntityGraph(attributePaths = {"imagens"})
     @Query("SELECT p FROM Produto p LEFT JOIN FETCH p.imagens WHERE p.produtoId = :produtoId")

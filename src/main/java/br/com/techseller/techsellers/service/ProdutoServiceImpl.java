@@ -474,7 +474,6 @@ public class ProdutoServiceImpl implements ProdutoService {
         }
     }
 
-    // Métodos não utilizados (mantidos para compatibilidade)
     @Override
     public void salvarProduto(Produto produto, MultipartFile imagem, boolean imagemPrincipal) {
         throw new UnsupportedOperationException("Método não suportado. Use salvarProduto(Produto, MultipartFile[])");

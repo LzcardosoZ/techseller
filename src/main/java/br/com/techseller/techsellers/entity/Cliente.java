@@ -1,6 +1,8 @@
 package br.com.techseller.techsellers.entity;
 
+import br.com.techseller.techsellers.enums.TipoEndereco;
 import jakarta.persistence.*;
+import jakarta.validation.Valid;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -35,30 +37,26 @@ public class Cliente {
     private String genero;
 
     @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Valid
     private List<Endereco> enderecos = new ArrayList<>();
-
 
     // Endereço de faturamento (padrao = true)
     public Endereco getEnderecoFaturamento() {
         return enderecos.stream()
-                .filter(e -> Boolean.TRUE.equals(e.getPadrao()))
+                .filter(e -> TipoEndereco.FATURAMENTO.equals(e.getTipo()))
                 .findFirst()
                 .orElse(null);
     }
+
 
     // Endereços de entrega (padrao = false)
     public List<Endereco> getEnderecosEntrega() {
         return enderecos.stream()
-                .filter(e -> e.getPadrao() == null || !e.getPadrao())
+                .filter(e -> TipoEndereco.ENTREGA.equals(e.getTipo()))
                 .collect(Collectors.toList());
     }
 
     public Endereco getEnderecoPadrao() {
-        return enderecos.stream()
-                .filter(e -> Boolean.TRUE.equals(e.getPadrao()))
-                .findFirst()
-                .orElse(null);
+        return getEnderecoFaturamento();
     }
-
-
 }

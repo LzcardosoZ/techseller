@@ -15,7 +15,7 @@ public class ItemCarrinho implements Serializable {
         this.quantidade = quantidade;
     }
 
-    // Getters e Setters
+
     public Produto getProduto() {
         return produto;
     }
