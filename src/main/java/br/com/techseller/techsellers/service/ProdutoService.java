@@ -23,6 +23,7 @@ public interface ProdutoService {
 
     void salvarProduto(Produto produto, MultipartFile imagem, boolean imagemPrincipal);
 
+    Produto salvarProduto(Produto produto, MultipartFile[] imagens, boolean ignorarValidacaoImagens) throws IOException;
 
     void editarProduto(Produto produto, MultipartFile imagem, boolean imagemPrincipal);
 

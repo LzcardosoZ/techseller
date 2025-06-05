@@ -158,9 +158,7 @@ public class ProdutoController {
             Authentication authentication) {
 
         if (result.hasErrors()) {
-            produto.setImagens(produtoService.listarImagensPorProduto(id));
-            produto.setImagemIds(produto.getImagemIds()); // Adicionado
-            model.addAttribute("produto", produto);
+            model.addAttribute("produto", produtoService.buscarPorId(id).orElse(new Produto()));
             return "editarProduto";
         }
 
@@ -168,14 +166,16 @@ public class ProdutoController {
             boolean isEstoquista = authentication.getAuthorities().stream()
                     .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ESTOQUISTA"));
 
-            Produto produtoExistente = produtoService.buscarPorId(id)
-                    .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
-
             if (isEstoquista) {
+                Produto produtoExistente = produtoService.buscarPorId(id)
+                        .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
+
                 produtoExistente.setQuantidadeEstoque(produto.getQuantidadeEstoque());
-                produtoService.salvarProduto(produtoExistente, new MultipartFile[0]);
+
+                // Chama salvar com a instância correta
+                produtoService.salvarProduto(produtoExistente, new MultipartFile[0], true);
+
             } else {
-                // Validação de imagens para admin
                 int totalImagensAtuais = produtoService.listarImagensPorProduto(id).size();
                 int imagensSeremRemovidas = imagensRemovidas != null ? imagensRemovidas.size() : 0;
                 int novasImagensCount = novasImagens != null ? Arrays.stream(novasImagens)
@@ -183,35 +183,24 @@ public class ProdutoController {
                         .toArray().length : 0;
 
                 if ((totalImagensAtuais - imagensSeremRemovidas + novasImagensCount) < 1) {
+                    model.addAttribute("produto", produtoService.buscarPorId(id).orElse(new Produto()));
                     redirectAttributes.addFlashAttribute("error", "O produto deve ter pelo menos uma imagem");
-                    produto.setImagens(produtoService.listarImagensPorProduto(id));
-                    produto.setImagemIds(produto.getImagemIds()); // Adicionado
-                    model.addAttribute("produto", produto);
                     return "editarProduto";
                 }
 
-                // Processar remoção de imagens
-                if (imagensRemovidas != null && !imagensRemovidas.isEmpty()) {
-                    imagensRemovidas.forEach(produtoService::removerImagem);
-                }
-
-                // Salvar com novas imagens
-                produtoService.salvarProduto(produto, novasImagens);
+                produtoService.editarProduto(produto, novasImagens, imagensRemovidas);
             }
 
             redirectAttributes.addFlashAttribute("success", "Produto atualizado com sucesso!");
+            return "redirect:/produtos/gerenciar-produtos";
+
         } catch (Exception e) {
             log.error("Erro ao editar produto ID: {}", id, e);
+            model.addAttribute("produto", produtoService.buscarPorId(id).orElse(new Produto()));
             redirectAttributes.addFlashAttribute("error", "Erro: " + e.getMessage());
-            produto.setImagens(produtoService.listarImagensPorProduto(id));
-            produto.setImagemIds(produto.getImagemIds()); // Adicionado
-            model.addAttribute("produto", produto);
             return "editarProduto";
         }
-
-        return "redirect:/produtos";
     }
-
 
     @GetMapping("/imagem/{imagemId}")
     public ResponseEntity<Resource> exibirImagem(@PathVariable Long imagemId) {
@@ -377,13 +366,13 @@ public class ProdutoController {
     @PostMapping("/inativar/{id}")
     public String inativarProduto(@PathVariable Long id) {
         produtoService.inativarProduto(id);
-        return "redirect:/produtos";
+        return "redirect:/produtos/gerenciar-produtos";
     }
 
     @PostMapping("/reativar/{id}")
     public String reativarProduto(@PathVariable Long id) {
         produtoService.reativarProduto(id);
-        return "redirect:/produtos";
+        return "redirect:/produtos/gerenciar-produtos";
     }
     @Controller
     @RequestMapping("/loja")

@@ -99,6 +99,42 @@ public class ProdutoServiceImpl implements ProdutoService {
         }
     }
 
+    @Transactional
+    @Override
+    public Produto salvarProduto(Produto produto, MultipartFile[] imagens, boolean ignorarValidacaoImagens) throws IOException {
+        Objects.requireNonNull(produto, "Produto não pode ser nulo");
+
+        // Só valida imagens se for uma operação de criação, ou se a validação for obrigatória
+        if (!ignorarValidacaoImagens) {
+            validarImagens(imagens);
+        }
+
+        produto.setAvaliacao(Optional.ofNullable(produto.getAvaliacao()).orElse(BigDecimal.ZERO));
+        produto.setAtivo(Optional.ofNullable(produto.getAtivo()).orElse(true));
+
+        try {
+            // Salva o produto (necessário para garantir o ID)
+            Produto produtoSalvo = produtoRepository.save(produto);
+
+            // Processa novas imagens (se houver)
+            List<ImagemProduto> imagensSalvas = processarEAssociarImagens(produtoSalvo, imagens);
+
+            // Se houver novas imagens, adiciona ao produto
+            if (!imagensSalvas.isEmpty()) {
+                produtoSalvo.setImagens(imagensSalvas);
+            }
+
+            log.info("Produto salvo com sucesso: ID {}, {} novas imagens",
+                    produtoSalvo.getProdutoId(), imagensSalvas.size());
+
+            return produtoRepository.save(produtoSalvo);
+
+        } catch (DataIntegrityViolationException e) {
+            log.error("Erro de integridade ao salvar produto: {}", e.getMessage());
+            throw new IllegalArgumentException("Dados inválidos para cadastro do produto", e);
+        }
+    }
+
     private void validarImagens(MultipartFile[] imagens) {
         if (imagens == null || imagens.length == 0 || Arrays.stream(imagens).allMatch(MultipartFile::isEmpty)) {
             throw new IllegalArgumentException("O produto deve ter pelo menos uma imagem válida");
